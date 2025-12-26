@@ -4,8 +4,8 @@ import { StatusBar } from 'expo-status-bar';
 import { Provider } from 'react-redux';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import store from './src/app/store';
-import Navigation from './src/app/navigation';
+import store from './src/store/store';
+import Navigation from './src/store/navigation';
 
 export default function App() {
   return (

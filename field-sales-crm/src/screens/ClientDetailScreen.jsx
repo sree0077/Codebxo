@@ -16,18 +16,12 @@ const ClientDetailScreen = () => {
   const { getClientById, removeClient, refreshClients } = useClients();
   const { getClientInteractions, removeInteraction } = useInteractions();
 
-  const client = useMemo(() => {
-    const foundClient = getClientById(clientId);
-    console.log('ClientDetailScreen - client:', foundClient ? 'found' : 'not found', 'for id:', clientId);
-    return foundClient;
-  }, [clientId, getClientById]);
-
+  const client = useMemo(() => getClientById(clientId), [clientId, getClientById]);
   const interactions = useMemo(() => getClientInteractions(clientId), [clientId, getClientInteractions]);
 
   // If client is not found, try refreshing clients
   useEffect(() => {
     if (!client) {
-      console.log('Client not found, refreshing clients...');
       refreshClients();
     }
   }, [client, refreshClients]);

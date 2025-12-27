@@ -123,7 +123,6 @@ export const deleteClient = async (clientId) => {
 
 export const getClientsByUser = async (userId) => {
   try {
-    console.log('Fetching clients for user:', userId);
     const q = query(
       collection(db, COLLECTIONS.CLIENTS),
       where('userId', '==', userId),
@@ -131,13 +130,10 @@ export const getClientsByUser = async (userId) => {
     );
     const snapshot = await getDocs(q);
     const clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    console.log('Fetched clients:', clients.length);
     return { success: true, clients };
   } catch (error) {
-    console.error('Error fetching clients:', error);
     // If orderBy fails (missing index), try without orderBy
     if (error.code === 'failed-precondition' || error.message.includes('index')) {
-      console.log('Retrying without orderBy...');
       try {
         const q = query(
           collection(db, COLLECTIONS.CLIENTS),
@@ -151,10 +147,8 @@ export const getClientsByUser = async (userId) => {
           const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);
           return dateB - dateA;
         });
-        console.log('Fetched clients (without index):', clients.length);
         return { success: true, clients };
       } catch (retryError) {
-        console.error('Retry failed:', retryError);
         return { success: false, error: retryError.message, clients: [] };
       }
     }
@@ -198,7 +192,6 @@ export const deleteInteraction = async (interactionId) => {
 
 export const getInteractionsByUser = async (userId) => {
   try {
-    console.log('Fetching interactions for user:', userId);
     const q = query(
       collection(db, COLLECTIONS.INTERACTIONS),
       where('userId', '==', userId),
@@ -206,13 +199,10 @@ export const getInteractionsByUser = async (userId) => {
     );
     const snapshot = await getDocs(q);
     const interactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    console.log('Fetched interactions:', interactions.length);
     return { success: true, interactions };
   } catch (error) {
-    console.error('Error fetching interactions:', error);
     // If orderBy fails (missing index), try without orderBy
     if (error.code === 'failed-precondition' || error.message.includes('index')) {
-      console.log('Retrying without orderBy...');
       try {
         const q = query(
           collection(db, COLLECTIONS.INTERACTIONS),
@@ -226,10 +216,8 @@ export const getInteractionsByUser = async (userId) => {
           const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);
           return dateB - dateA;
         });
-        console.log('Fetched interactions (without index):', interactions.length);
         return { success: true, interactions };
       } catch (retryError) {
-        console.error('Retry failed:', retryError);
         return { success: false, error: retryError.message, interactions: [] };
       }
     }

@@ -32,7 +32,7 @@ const Dropdown = ({
           error && styles.selectorError,
           disabled && styles.selectorDisabled,
           disabled ? webDisabled : webInteractive,
-        ]}
+        ].filter(Boolean)}
         activeOpacity={0.7}
       >
         <Text style={[
@@ -71,7 +71,7 @@ const Dropdown = ({
                     styles.option,
                     item.value === value && styles.optionSelected,
                     webInteractive,
-                  ]}
+                  ].filter(Boolean)}
                 >
                   <Text
                     style={[

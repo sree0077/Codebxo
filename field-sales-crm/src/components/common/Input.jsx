@@ -48,15 +48,15 @@ const Input = ({
           editable={editable}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          style={[styles.input, multiline && styles.multilineInput, webInput]}
+          style={[styles.input, multiline && styles.multilineInput, webInput].filter(Boolean)}
         />
         {secureTextEntry && (
-          <Pressable onPress={() => setShowPassword(!showPassword)} style={[styles.iconButton, webInteractive]}>
+          <Pressable onPress={() => setShowPassword(!showPassword)} style={[styles.iconButton, webInteractive].filter(Boolean)}>
             <Text style={styles.iconText}>{showPassword ? '🙈' : '👁️'}</Text>
           </Pressable>
         )}
         {rightIcon && (
-          <Pressable onPress={onRightIconPress} style={[styles.iconButton, webInteractive]}>
+          <Pressable onPress={onRightIconPress} style={[styles.iconButton, webInteractive].filter(Boolean)}>
             {rightIcon}
           </Pressable>
         )}

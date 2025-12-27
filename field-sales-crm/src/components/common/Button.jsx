@@ -74,7 +74,7 @@ const Button = ({
         pressed && styles.pressed,
         disabled || loading ? webDisabled : webInteractive,
         style,
-      ]}
+      ].filter(Boolean)}
     >
       {loading ? (
         <ActivityIndicator color={variant === 'secondary' || variant === 'outline' ? '#3b82f6' : '#ffffff'} />

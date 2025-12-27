@@ -75,13 +75,26 @@ const Navigation = () => {
 
   // Load user on app initialization
   useEffect(() => {
+    console.log('[NAVIGATION] 🧭 Navigation component mounted');
+    console.log('[NAVIGATION] 📡 Dispatching loadUser...');
     dispatch(loadUser());
   }, [dispatch]);
 
+  // Log auth state changes
+  useEffect(() => {
+    console.log('[NAVIGATION] 🔐 Auth state changed:', {
+      isAuthenticated,
+      isLoading,
+    });
+  }, [isAuthenticated, isLoading]);
+
   // Show loading only briefly, then default to login
   if (isLoading) {
+    console.log('[NAVIGATION] ⏳ Showing loading screen...');
     return <LoadingScreen />;
   }
+
+  console.log('[NAVIGATION] ✅ Rendering', isAuthenticated ? 'MainStack' : 'AuthStack');
 
   return (
     <View style={styles.container}>

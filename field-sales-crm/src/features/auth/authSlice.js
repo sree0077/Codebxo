@@ -47,16 +47,20 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({ email, password }, { rejectWithValue }) => {
     try {
+      console.log('[AUTH] 🔐 Login attempt for:', email);
       const result = await firebaseLogin(email, password);
       if (result.success) {
+        console.log('[AUTH] ✅ Login successful:', result.user.email);
         return {
           id: result.user.uid,
           email: result.user.email,
           displayName: result.user.displayName || result.user.email?.split('@')[0],
         };
       }
+      console.error('[AUTH] ❌ Login failed:', result.error);
       throw new Error(result.error || 'Login failed');
     } catch (error) {
+      console.error('[AUTH] ❌ Login error:', error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -67,16 +71,20 @@ export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async ({ email, password }, { rejectWithValue }) => {
     try {
+      console.log('[AUTH] 📝 Registration attempt for:', email);
       const result = await firebaseRegister(email, password);
       if (result.success) {
+        console.log('[AUTH] ✅ Registration successful:', result.user.email);
         return {
           id: result.user.uid,
           email: result.user.email,
           displayName: result.user.displayName || result.user.email?.split('@')[0],
         };
       }
+      console.error('[AUTH] ❌ Registration failed:', result.error);
       throw new Error(result.error || 'Registration failed');
     } catch (error) {
+      console.error('[AUTH] ❌ Registration error:', error.message);
       return rejectWithValue(error.message);
     }
   }

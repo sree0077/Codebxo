@@ -33,6 +33,7 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
+console.log('[FIREBASE] 🔥 Initializing Firebase...');
 const app = initializeApp(firebaseConfig);
 
 // Initialize Auth - use getAuth for both web and mobile
@@ -41,22 +42,29 @@ const auth = getAuth(app);
 
 // Initialize Firestore
 const db = getFirestore(app);
+console.log('[FIREBASE] ✅ Firebase initialized successfully');
 
 // Auth Functions
 export const loginUser = async (email, password) => {
   try {
+    console.log('[FIREBASE] 🔐 Attempting login for:', email);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    console.log('[FIREBASE] ✅ Login successful');
     return { success: true, user: userCredential.user };
   } catch (error) {
+    console.error('[FIREBASE] ❌ Login error:', error.code, error.message);
     return { success: false, error: error.message };
   }
 };
 
 export const registerUser = async (email, password) => {
   try {
+    console.log('[FIREBASE] 📝 Attempting registration for:', email);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    console.log('[FIREBASE] ✅ Registration successful');
     return { success: true, user: userCredential.user };
   } catch (error) {
+    console.error('[FIREBASE] ❌ Registration error:', error.code, error.message);
     return { success: false, error: error.message };
   }
 };

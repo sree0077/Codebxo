@@ -14,14 +14,23 @@ const LoginScreen = () => {
 
   const { login, register, isLoading, error, dismissError } = useAuth();
 
+  // Log component mount
+  React.useEffect(() => {
+    console.log('[LOGIN] 🔐 LoginScreen mounted');
+  }, []);
+
   const handleSubmit = async () => {
+    console.log('[LOGIN] 📝 Form submitted:', { isLogin, email });
+
     const validation = validateLoginForm(email, password);
     if (!validation.isValid) {
+      console.log('[LOGIN] ❌ Validation failed:', validation.errors);
       setErrors(validation.errors);
       return;
     }
 
     if (!isLogin && password !== confirmPassword) {
+      console.log('[LOGIN] ❌ Passwords do not match');
       setErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }
@@ -29,13 +38,16 @@ const LoginScreen = () => {
     setErrors({});
 
     if (isLogin) {
+      console.log('[LOGIN] 🔐 Attempting login...');
       await login(email, password);
     } else {
+      console.log('[LOGIN] 📝 Attempting registration...');
       await register(email, password);
     }
   };
 
   const toggleMode = () => {
+    console.log('[LOGIN] 🔄 Toggling mode to:', !isLogin ? 'Login' : 'Register');
     setIsLogin(!isLogin);
     setErrors({});
     dismissError();

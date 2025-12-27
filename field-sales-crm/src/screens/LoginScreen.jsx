@@ -98,7 +98,7 @@ const LoginScreen = () => {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Enter your password"
-                secureTextEntry
+                secureTextEntry={true}
                 error={errors.password}
               />
 
@@ -108,7 +108,7 @@ const LoginScreen = () => {
                   value={confirmPassword}
                   onChangeText={setConfirmPassword}
                   placeholder="Confirm your password"
-                  secureTextEntry
+                  secureTextEntry={true}
                   error={errors.confirmPassword}
                 />
               )}

@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import store from './src/store/store';
 import Navigation from './src/store/navigation';
+import { ErrorBoundary } from './src/components/common';
 
 console.log('[APP] 🚀 Starting Field Sales CRM...');
 console.log('[APP] 📱 Platform:', Platform.OS);
@@ -23,13 +24,15 @@ const RootWrapper = ({ children }) => {
 export default function App() {
   console.log('[APP] ✅ App component mounted');
   return (
-    <RootWrapper>
-      <Provider store={store}>
-        <SafeAreaProvider>
-          <StatusBar style="auto" />
-          <Navigation />
-        </SafeAreaProvider>
-      </Provider>
-    </RootWrapper>
+    <ErrorBoundary>
+      <RootWrapper>
+        <Provider store={store}>
+          <SafeAreaProvider>
+            <StatusBar style="auto" />
+            <Navigation />
+          </SafeAreaProvider>
+        </Provider>
+      </RootWrapper>
+    </ErrorBoundary>
   );
 }

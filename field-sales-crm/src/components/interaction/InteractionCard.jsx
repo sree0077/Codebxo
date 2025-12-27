@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Card from '../common/Card';
 import { getInteractionIcon, formatDateTime, formatDate } from '../../utils/helpers';
 
@@ -20,46 +20,44 @@ const InteractionCard = ({ interaction, onPress, onDelete }) => {
   };
 
   return (
-    <Card onPress={onPress} style={{ marginBottom: 12 }}>
-      <View className="flex-row items-start">
+    <Card onPress={onPress} style={styles.cardContainer}>
+      <View style={styles.container}>
         {/* Icon */}
         <View
-          className="w-12 h-12 rounded-full items-center justify-center mr-4"
-          style={{ backgroundColor: getTypeColor() + '20' }}
+          style={[styles.iconContainer, { backgroundColor: getTypeColor() + '20' }]}
         >
-          <Text className="text-xl">{icon}</Text>
+          <Text style={styles.iconText}>{icon}</Text>
         </View>
 
         {/* Content */}
-        <View className="flex-1">
-          <View className="flex-row items-center justify-between mb-1">
+        <View style={styles.content}>
+          <View style={styles.header}>
             <Text
-              className="text-base font-semibold capitalize"
-              style={{ color: getTypeColor() }}
+              style={[styles.typeText, { color: getTypeColor() }]}
             >
               {interaction.type}
             </Text>
-            <Text className="text-gray-400 text-xs">
+            <Text style={styles.dateText}>
               {formatDateTime(interaction.createdAt)}
             </Text>
           </View>
 
-          <Text className="text-gray-700 text-sm mb-2" numberOfLines={2}>
+          <Text style={styles.notesText} numberOfLines={2}>
             {interaction.notes}
           </Text>
 
           {interaction.clientReply && (
-            <View className="bg-gray-50 rounded-lg p-2 mb-2">
-              <Text className="text-gray-500 text-xs mb-1">Client Reply:</Text>
-              <Text className="text-gray-700 text-sm" numberOfLines={2}>
+            <View style={styles.replyContainer}>
+              <Text style={styles.replyLabel}>Client Reply:</Text>
+              <Text style={styles.replyText} numberOfLines={2}>
                 {interaction.clientReply}
               </Text>
             </View>
           )}
 
           {interaction.followUpDate && (
-            <View className="flex-row items-center">
-              <Text className="text-orange-500 text-xs">
+            <View style={styles.followUpContainer}>
+              <Text style={styles.followUpText}>
                 📅 Follow-up: {formatDate(interaction.followUpDate)}
               </Text>
             </View>
@@ -70,15 +68,88 @@ const InteractionCard = ({ interaction, onPress, onDelete }) => {
         {onDelete && (
           <TouchableOpacity
             onPress={() => onDelete(interaction.id)}
-            className="p-2"
+            style={styles.deleteButton}
           >
-            <Text className="text-gray-400">🗑️</Text>
+            <Text style={styles.deleteIcon}>🗑️</Text>
           </TouchableOpacity>
         )}
       </View>
     </Card>
   );
 };
+
+const styles = StyleSheet.create({
+  cardContainer: {
+    marginBottom: 12,
+  },
+  container: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  iconText: {
+    fontSize: 20,
+  },
+  content: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  typeText: {
+    fontSize: 16,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  dateText: {
+    color: '#9ca3af',
+    fontSize: 12,
+  },
+  notesText: {
+    color: '#374151',
+    fontSize: 14,
+    marginBottom: 8,
+  },
+  replyContainer: {
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 8,
+  },
+  replyLabel: {
+    color: '#6b7280',
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  replyText: {
+    color: '#374151',
+    fontSize: 14,
+  },
+  followUpContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  followUpText: {
+    color: '#f97316',
+    fontSize: 12,
+  },
+  deleteButton: {
+    padding: 8,
+  },
+  deleteIcon: {
+    color: '#9ca3af',
+  },
+});
 
 export default InteractionCard;
 

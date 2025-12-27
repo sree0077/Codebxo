@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector } from 'react-redux';
@@ -11,7 +12,6 @@ import {
   EditClientScreen,
   AddInteractionScreen,
 } from '../screens';
-import { LoadingSpinner } from '../components/common';
 
 const Stack = createNativeStackNavigator();
 
@@ -60,19 +60,48 @@ const MainStack = () => (
   </Stack.Navigator>
 );
 
+// Simple loading component
+const LoadingScreen = () => (
+  <View style={styles.loadingContainer}>
+    <ActivityIndicator size="large" color="#3b82f6" />
+    <Text style={styles.loadingText}>Loading...</Text>
+  </View>
+);
+
 const Navigation = () => {
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
 
+  // Show loading only briefly, then default to login
   if (isLoading) {
-    return <LoadingSpinner fullScreen message="Loading..." />;
+    return <LoadingScreen />;
   }
 
   return (
-    <NavigationContainer>
-      {isAuthenticated ? <MainStack /> : <AuthStack />}
-    </NavigationContainer>
+    <View style={styles.container}>
+      <NavigationContainer>
+        {isAuthenticated ? <MainStack /> : <AuthStack />}
+      </NavigationContainer>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#4b5563',
+  },
+});
 
 export default Navigation;
 

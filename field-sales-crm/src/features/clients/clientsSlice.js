@@ -1,7 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '../../utils/constants';
-import { generateId } from '../../utils/helpers';
+import {
+  addClient as firebaseAddClient,
+  updateClient as firebaseUpdateClient,
+  deleteClient as firebaseDeleteClient,
+  getClientsByUser
+} from '../../services/firebase';
 
 const initialState = {
   items: [],
@@ -11,72 +14,78 @@ const initialState = {
   searchQuery: '',
 };
 
-// Helper to get storage key for user
-const getClientStorageKey = (userId) => `${STORAGE_KEYS.CLIENTS}_${userId}`;
-
-// Load clients for user
+// Load clients for user from Firestore
 export const loadClients = createAsyncThunk(
   'clients/loadClients',
   async (userId, { rejectWithValue }) => {
     try {
-      const clientsJson = await AsyncStorage.getItem(getClientStorageKey(userId));
-      return clientsJson ? JSON.parse(clientsJson) : [];
+      const result = await getClientsByUser(userId);
+      if (result.success) {
+        // Convert Firestore timestamps to ISO strings
+        return result.clients.map(client => ({
+          ...client,
+          createdAt: client.createdAt?.toDate?.()?.toISOString() || client.createdAt,
+          updatedAt: client.updatedAt?.toDate?.()?.toISOString() || client.updatedAt,
+        }));
+      }
+      return [];
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Add new client
+// Add new client to Firestore
 export const addClient = createAsyncThunk(
   'clients/addClient',
-  async ({ userId, clientData }, { getState, rejectWithValue }) => {
+  async ({ userId, clientData }, { rejectWithValue }) => {
     try {
-      const newClient = {
+      const result = await firebaseAddClient({
         ...clientData,
-        id: generateId(),
         userId,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      const { clients } = getState();
-      const updatedClients = [newClient, ...clients.items];
-      await AsyncStorage.setItem(getClientStorageKey(userId), JSON.stringify(updatedClients));
-      return newClient;
+      });
+      if (result.success) {
+        return {
+          ...clientData,
+          id: result.id,
+          userId,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+      }
+      throw new Error(result.error || 'Failed to add client');
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Update client
+// Update client in Firestore
 export const updateClient = createAsyncThunk(
   'clients/updateClient',
-  async ({ userId, clientId, clientData }, { getState, rejectWithValue }) => {
+  async ({ userId, clientId, clientData }, { rejectWithValue }) => {
     try {
-      const { clients } = getState();
-      const updatedClients = clients.items.map((client) =>
-        client.id === clientId
-          ? { ...client, ...clientData, updatedAt: new Date().toISOString() }
-          : client
-      );
-      await AsyncStorage.setItem(getClientStorageKey(userId), JSON.stringify(updatedClients));
-      return { clientId, clientData };
+      const result = await firebaseUpdateClient(clientId, clientData);
+      if (result.success) {
+        return { clientId, clientData: { ...clientData, updatedAt: new Date().toISOString() } };
+      }
+      throw new Error(result.error || 'Failed to update client');
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Delete client
+// Delete client from Firestore
 export const deleteClient = createAsyncThunk(
   'clients/deleteClient',
-  async ({ userId, clientId }, { getState, rejectWithValue }) => {
+  async ({ userId, clientId }, { rejectWithValue }) => {
     try {
-      const { clients } = getState();
-      const updatedClients = clients.items.filter((client) => client.id !== clientId);
-      await AsyncStorage.setItem(getClientStorageKey(userId), JSON.stringify(updatedClients));
-      return clientId;
+      const result = await firebaseDeleteClient(clientId);
+      if (result.success) {
+        return clientId;
+      }
+      throw new Error(result.error || 'Failed to delete client');
     } catch (error) {
       return rejectWithValue(error.message);
     }

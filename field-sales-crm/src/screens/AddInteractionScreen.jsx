@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, View, Text, Alert } from 'react-native';
+import { SafeAreaView, ScrollView, View, Text, Alert, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Input, Button, Dropdown } from '../components/common';
 import { useInteractions } from '../hooks/useInteractions';
@@ -71,13 +71,13 @@ const AddInteractionScreen = () => {
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-        <View className="p-4">
+    <SafeAreaView style={styles.container}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        <View style={styles.content}>
           {/* Client Info */}
-          <View className="bg-blue-50 rounded-xl p-4 mb-6">
-            <Text className="text-blue-700 font-semibold">Adding interaction for:</Text>
-            <Text className="text-blue-800 text-lg font-bold">{clientName}</Text>
+          <View style={styles.clientInfo}>
+            <Text style={styles.clientLabel}>Adding interaction for:</Text>
+            <Text style={styles.clientName}>{clientName}</Text>
           </View>
 
           <Dropdown
@@ -114,7 +114,7 @@ const AddInteractionScreen = () => {
             onSelect={(value) => handleChange('followUpDate', value)}
           />
 
-          <View className="mt-6 mb-8">
+          <View style={styles.submitSection}>
             <Button
               title="Save Interaction"
               onPress={handleSubmit}
@@ -126,6 +126,38 @@ const AddInteractionScreen = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+  clientInfo: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 24,
+  },
+  clientLabel: {
+    color: '#1d4ed8',
+    fontWeight: '600',
+  },
+  clientName: {
+    color: '#1e3a8a',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  submitSection: {
+    marginTop: 24,
+    marginBottom: 32,
+  },
+});
 
 export default AddInteractionScreen;
 

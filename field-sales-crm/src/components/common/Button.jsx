@@ -1,5 +1,6 @@
 import React from 'react';
-import { TouchableOpacity, Text, ActivityIndicator, View } from 'react-native';
+import { Pressable, Text, ActivityIndicator, View, StyleSheet } from 'react-native';
+import { webInteractive, webDisabled } from '../../utils/webStyles';
 
 const Button = ({
   title,
@@ -12,79 +13,157 @@ const Button = ({
   fullWidth = true,
   style = {},
 }) => {
-  const getVariantStyles = () => {
+  const getVariantStyle = () => {
     switch (variant) {
       case 'secondary':
-        return 'bg-gray-200 border border-gray-300';
+        return styles.secondary;
       case 'outline':
-        return 'bg-transparent border-2 border-blue-500';
+        return styles.outline;
       case 'danger':
-        return 'bg-red-500';
+        return styles.danger;
       case 'success':
-        return 'bg-green-500';
+        return styles.success;
       default:
-        return 'bg-blue-500';
+        return styles.primary;
     }
   };
 
-  const getTextStyles = () => {
+  const getTextStyle = () => {
     switch (variant) {
       case 'secondary':
-        return 'text-gray-700';
+        return styles.textSecondary;
       case 'outline':
-        return 'text-blue-500';
+        return styles.textOutline;
       default:
-        return 'text-white';
+        return styles.textPrimary;
     }
   };
 
-  const getSizeStyles = () => {
+  const getSizeStyle = () => {
     switch (size) {
       case 'small':
-        return 'py-2 px-3';
+        return styles.sizeSmall;
       case 'large':
-        return 'py-4 px-6';
+        return styles.sizeLarge;
       default:
-        return 'py-3 px-4';
+        return styles.sizeMedium;
     }
   };
 
-  const getTextSize = () => {
+  const getTextSizeStyle = () => {
     switch (size) {
       case 'small':
-        return 'text-sm';
+        return styles.textSmall;
       case 'large':
-        return 'text-lg';
+        return styles.textLarge;
       default:
-        return 'text-base';
+        return styles.textMedium;
     }
   };
 
   return (
-    <TouchableOpacity
+    <Pressable
       onPress={onPress}
       disabled={disabled || loading}
-      className={`
-        ${getVariantStyles()}
-        ${getSizeStyles()}
-        ${fullWidth ? 'w-full' : ''}
-        ${disabled ? 'opacity-50' : ''}
-        rounded-xl flex-row items-center justify-center
-      `}
-      style={style}
-      activeOpacity={0.7}
+      style={({ pressed }) => [
+        styles.button,
+        getVariantStyle(),
+        getSizeStyle(),
+        fullWidth && styles.fullWidth,
+        disabled && styles.disabled,
+        pressed && styles.pressed,
+        disabled || loading ? webDisabled : webInteractive,
+        style,
+      ]}
     >
       {loading ? (
         <ActivityIndicator color={variant === 'secondary' || variant === 'outline' ? '#3b82f6' : '#ffffff'} />
       ) : (
-        <View className="flex-row items-center">
-          {icon && <View className="mr-2">{icon}</View>}
-          <Text className={`${getTextStyles()} ${getTextSize()} font-semibold`}>{title}</Text>
+        <View style={styles.content}>
+          {icon && <View style={styles.iconContainer}>{icon}</View>}
+          <Text style={[getTextStyle(), getTextSizeStyle(), styles.textBold]}>{title}</Text>
         </View>
       )}
-    </TouchableOpacity>
+    </Pressable>
   );
 };
+
+const styles = StyleSheet.create({
+  button: {
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  primary: {
+    backgroundColor: '#3b82f6',
+  },
+  secondary: {
+    backgroundColor: '#e5e7eb',
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+  },
+  outline: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#3b82f6',
+  },
+  danger: {
+    backgroundColor: '#ef4444',
+  },
+  success: {
+    backgroundColor: '#22c55e',
+  },
+  sizeSmall: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  sizeMedium: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+  },
+  sizeLarge: {
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+  },
+  fullWidth: {
+    width: '100%',
+  },
+  disabled: {
+    opacity: 0.5,
+  },
+  pressed: {
+    opacity: 0.7,
+  },
+  content: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconContainer: {
+    marginRight: 8,
+  },
+  textPrimary: {
+    color: '#ffffff',
+  },
+  textSecondary: {
+    color: '#374151',
+  },
+  textOutline: {
+    color: '#3b82f6',
+  },
+  textSmall: {
+    fontSize: 14,
+  },
+  textMedium: {
+    fontSize: 16,
+  },
+  textLarge: {
+    fontSize: 18,
+  },
+  textBold: {
+    fontWeight: '600',
+  },
+});
 
 export default Button;
 

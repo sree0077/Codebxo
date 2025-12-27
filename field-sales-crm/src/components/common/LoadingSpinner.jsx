@@ -1,23 +1,42 @@
 import React from 'react';
-import { View, ActivityIndicator, Text } from 'react-native';
+import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 
 const LoadingSpinner = ({ message = 'Loading...', fullScreen = false }) => {
   if (fullScreen) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View style={styles.fullScreen}>
         <ActivityIndicator size="large" color="#3b82f6" />
-        <Text className="text-gray-600 mt-4 text-base">{message}</Text>
+        <Text style={styles.message}>{message}</Text>
       </View>
     );
   }
 
   return (
-    <View className="items-center justify-center py-8">
+    <View style={styles.container}>
       <ActivityIndicator size="large" color="#3b82f6" />
-      <Text className="text-gray-600 mt-4 text-base">{message}</Text>
+      <Text style={styles.message}>{message}</Text>
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  fullScreen: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#ffffff',
+  },
+  container: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 32,
+  },
+  message: {
+    color: '#4b5563',
+    marginTop: 16,
+    fontSize: 16,
+  },
+});
 
 export default LoadingSpinner;
 

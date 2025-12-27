@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Alert } from 'react-native';
+import { SafeAreaView, Alert, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ClientForm } from '../components/client';
 import { useClients } from '../hooks/useClients';
@@ -28,7 +28,7 @@ const AddClientScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={styles.container}>
       <ClientForm
         onSubmit={handleSubmit}
         isLoading={isLoading}
@@ -37,6 +37,13 @@ const AddClientScreen = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+});
 
 export default AddClientScreen;
 

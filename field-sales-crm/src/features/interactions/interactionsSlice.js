@@ -1,7 +1,10 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '../../utils/constants';
-import { generateId } from '../../utils/helpers';
+import {
+  addInteraction as firebaseAddInteraction,
+  updateInteraction as firebaseUpdateInteraction,
+  deleteInteraction as firebaseDeleteInteraction,
+  getInteractionsByUser
+} from '../../services/firebase';
 
 const initialState = {
   items: [],
@@ -9,80 +12,75 @@ const initialState = {
   error: null,
 };
 
-// Helper to get storage key
-const getInteractionStorageKey = (userId) => `${STORAGE_KEYS.INTERACTIONS}_${userId}`;
-
-// Load interactions for user
+// Load interactions for user from Firestore
 export const loadInteractions = createAsyncThunk(
   'interactions/loadInteractions',
   async (userId, { rejectWithValue }) => {
     try {
-      const interactionsJson = await AsyncStorage.getItem(getInteractionStorageKey(userId));
-      return interactionsJson ? JSON.parse(interactionsJson) : [];
+      const result = await getInteractionsByUser(userId);
+      if (result.success) {
+        return result.interactions.map(interaction => ({
+          ...interaction,
+          createdAt: interaction.createdAt?.toDate?.()?.toISOString() || interaction.createdAt,
+        }));
+      }
+      return [];
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Add new interaction
+// Add new interaction to Firestore
 export const addInteraction = createAsyncThunk(
   'interactions/addInteraction',
-  async ({ userId, interactionData }, { getState, rejectWithValue }) => {
+  async ({ userId, interactionData }, { rejectWithValue }) => {
     try {
-      const newInteraction = {
+      const result = await firebaseAddInteraction({
         ...interactionData,
-        id: generateId(),
         userId,
-        createdAt: new Date().toISOString(),
-      };
-      const { interactions } = getState();
-      const updatedInteractions = [newInteraction, ...interactions.items];
-      await AsyncStorage.setItem(
-        getInteractionStorageKey(userId),
-        JSON.stringify(updatedInteractions)
-      );
-      return newInteraction;
+      });
+      if (result.success) {
+        return {
+          ...interactionData,
+          id: result.id,
+          userId,
+          createdAt: new Date().toISOString(),
+        };
+      }
+      throw new Error(result.error || 'Failed to add interaction');
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Update interaction
+// Update interaction in Firestore
 export const updateInteraction = createAsyncThunk(
   'interactions/updateInteraction',
-  async ({ userId, interactionId, interactionData }, { getState, rejectWithValue }) => {
+  async ({ userId, interactionId, interactionData }, { rejectWithValue }) => {
     try {
-      const { interactions } = getState();
-      const updatedInteractions = interactions.items.map((interaction) =>
-        interaction.id === interactionId
-          ? { ...interaction, ...interactionData }
-          : interaction
-      );
-      await AsyncStorage.setItem(
-        getInteractionStorageKey(userId),
-        JSON.stringify(updatedInteractions)
-      );
-      return { interactionId, interactionData };
+      const result = await firebaseUpdateInteraction(interactionId, interactionData);
+      if (result.success) {
+        return { interactionId, interactionData };
+      }
+      throw new Error(result.error || 'Failed to update interaction');
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Delete interaction
+// Delete interaction from Firestore
 export const deleteInteraction = createAsyncThunk(
   'interactions/deleteInteraction',
-  async ({ userId, interactionId }, { getState, rejectWithValue }) => {
+  async ({ userId, interactionId }, { rejectWithValue }) => {
     try {
-      const { interactions } = getState();
-      const updatedInteractions = interactions.items.filter((i) => i.id !== interactionId);
-      await AsyncStorage.setItem(
-        getInteractionStorageKey(userId),
-        JSON.stringify(updatedInteractions)
-      );
-      return interactionId;
+      const result = await firebaseDeleteInteraction(interactionId);
+      if (result.success) {
+        return interactionId;
+      }
+      throw new Error(result.error || 'Failed to delete interaction');
     } catch (error) {
       return rejectWithValue(error.message);
     }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, FlatList, SafeAreaView, StyleSheet } from 'react-native';
+import { webInteractive, webDisabled } from '../../utils/webStyles';
 
 const Dropdown = ({
   label,
@@ -20,25 +21,29 @@ const Dropdown = ({
   };
 
   return (
-    <View className="mb-4">
+    <View style={styles.container}>
       {label && (
-        <Text className="text-gray-700 font-medium mb-2 text-base">{label}</Text>
+        <Text style={styles.label}>{label}</Text>
       )}
       <TouchableOpacity
         onPress={() => !disabled && setIsOpen(true)}
-        className={`
-          flex-row items-center justify-between bg-gray-50 rounded-xl border-2 px-4 py-3
-          ${error ? 'border-red-500' : 'border-gray-200'}
-          ${disabled ? 'bg-gray-100 opacity-50' : ''}
-        `}
+        style={[
+          styles.selector,
+          error && styles.selectorError,
+          disabled && styles.selectorDisabled,
+          disabled ? webDisabled : webInteractive,
+        ]}
         activeOpacity={0.7}
       >
-        <Text className={`text-base ${selectedOption?.label ? 'text-gray-800' : 'text-gray-400'}`}>
+        <Text style={[
+          styles.selectorText,
+          !selectedOption?.label && styles.placeholderText
+        ]}>
           {selectedOption?.label || placeholder}
         </Text>
-        <Text className="text-gray-400">▼</Text>
+        <Text style={styles.arrow}>▼</Text>
       </TouchableOpacity>
-      {error && <Text className="text-red-500 text-sm mt-1">{error}</Text>}
+      {error && <Text style={styles.errorText}>{error}</Text>}
 
       <Modal
         visible={isOpen}
@@ -47,14 +52,14 @@ const Dropdown = ({
         onRequestClose={() => setIsOpen(false)}
       >
         <TouchableOpacity
-          className="flex-1 bg-black/50 justify-end"
+          style={styles.modalOverlay}
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
         >
-          <SafeAreaView className="bg-white rounded-t-3xl max-h-[70%]">
-            <View className="p-4 border-b border-gray-200">
-              <View className="w-12 h-1 bg-gray-300 rounded-full self-center mb-4" />
-              <Text className="text-lg font-bold text-gray-800 text-center">{label || 'Select Option'}</Text>
+          <SafeAreaView style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHandle} />
+              <Text style={styles.modalTitle}>{label || 'Select Option'}</Text>
             </View>
             <FlatList
               data={options.filter((opt) => opt.value !== '')}
@@ -62,21 +67,23 @@ const Dropdown = ({
               renderItem={({ item }) => (
                 <TouchableOpacity
                   onPress={() => handleSelect(item)}
-                  className={`
-                    px-6 py-4 border-b border-gray-100
-                    ${item.value === value ? 'bg-blue-50' : ''}
-                  `}
+                  style={[
+                    styles.option,
+                    item.value === value && styles.optionSelected,
+                    webInteractive,
+                  ]}
                 >
                   <Text
-                    className={`text-base ${
-                      item.value === value ? 'text-blue-600 font-semibold' : 'text-gray-700'
-                    }`}
+                    style={[
+                      styles.optionText,
+                      item.value === value && styles.optionTextSelected
+                    ]}
                   >
                     {item.label}
                   </Text>
                 </TouchableOpacity>
               )}
-              contentContainerStyle={{ paddingBottom: 20 }}
+              contentContainerStyle={styles.listContent}
             />
           </SafeAreaView>
         </TouchableOpacity>
@@ -84,6 +91,101 @@ const Dropdown = ({
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  label: {
+    color: '#374151',
+    fontWeight: '500',
+    marginBottom: 8,
+    fontSize: 16,
+  },
+  selector: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+  selectorError: {
+    borderColor: '#ef4444',
+  },
+  selectorDisabled: {
+    backgroundColor: '#f3f4f6',
+    opacity: 0.5,
+  },
+  selectorText: {
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  placeholderText: {
+    color: '#9ca3af',
+  },
+  arrow: {
+    color: '#9ca3af',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 14,
+    marginTop: 4,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#ffffff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '70%',
+  },
+  modalHeader: {
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  modalHandle: {
+    width: 48,
+    height: 4,
+    backgroundColor: '#d1d5db',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    textAlign: 'center',
+  },
+  option: {
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  optionSelected: {
+    backgroundColor: '#eff6ff',
+  },
+  optionText: {
+    fontSize: 16,
+    color: '#374151',
+  },
+  optionTextSelected: {
+    color: '#2563eb',
+    fontWeight: '600',
+  },
+  listContent: {
+    paddingBottom: 20,
+  },
+});
 
 export default Dropdown;
 

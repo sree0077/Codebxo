@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input, Button } from '../components/common';
 import { useAuth } from '../hooks/useAuth';
 import { validateLoginForm } from '../utils/validators';
@@ -10,25 +11,23 @@ const LoginScreen = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
-  
+
   const { login, register, isLoading, error, dismissError } = useAuth();
 
   const handleSubmit = async () => {
-    // Validate form
     const validation = validateLoginForm(email, password);
     if (!validation.isValid) {
       setErrors(validation.errors);
       return;
     }
 
-    // Check confirm password for registration
     if (!isLogin && password !== confirmPassword) {
       setErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }
 
     setErrors({});
-    
+
     if (isLogin) {
       await login(email, password);
     } else {
@@ -43,35 +42,35 @@ const LoginScreen = () => {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        className="flex-1"
+        style={styles.flex}
       >
         <ScrollView
-          contentContainerStyle={{ flexGrow: 1 }}
+          contentContainerStyle={styles.scrollContent}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View className="flex-1 px-6 justify-center">
+          <View style={styles.content}>
             {/* Header */}
-            <View className="items-center mb-10">
-              <Text className="text-5xl mb-4">📊</Text>
-              <Text className="text-3xl font-bold text-gray-800">Field Sales CRM</Text>
-              <Text className="text-gray-500 mt-2 text-center">
+            <View style={styles.header}>
+              <Text style={styles.icon}>📊</Text>
+              <Text style={styles.title}>Field Sales CRM</Text>
+              <Text style={styles.subtitle}>
                 {isLogin ? 'Welcome back! Please login to continue.' : 'Create an account to get started.'}
               </Text>
             </View>
 
             {/* Error Message */}
             {error && (
-              <View className="bg-red-50 border border-red-200 rounded-xl p-4 mb-4">
-                <Text className="text-red-600 text-center">{error}</Text>
+              <View style={styles.errorBox}>
+                <Text style={styles.errorText}>{error}</Text>
               </View>
             )}
 
             {/* Form */}
-            <View className="mb-6">
+            <View style={styles.form}>
               <Input
                 label="Email"
                 value={email}
@@ -80,7 +79,6 @@ const LoginScreen = () => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 error={errors.email}
-                icon={<Text className="text-gray-400">✉️</Text>}
               />
 
               <Input
@@ -90,7 +88,6 @@ const LoginScreen = () => {
                 placeholder="Enter your password"
                 secureTextEntry
                 error={errors.password}
-                icon={<Text className="text-gray-400">🔒</Text>}
               />
 
               {!isLogin && (
@@ -101,7 +98,6 @@ const LoginScreen = () => {
                   placeholder="Confirm your password"
                   secureTextEntry
                   error={errors.confirmPassword}
-                  icon={<Text className="text-gray-400">🔒</Text>}
                 />
               )}
             </View>
@@ -114,20 +110,20 @@ const LoginScreen = () => {
             />
 
             {/* Toggle Mode */}
-            <View className="flex-row justify-center mt-6">
-              <Text className="text-gray-500">
+            <View style={styles.toggleContainer}>
+              <Text style={styles.toggleText}>
                 {isLogin ? "Don't have an account? " : 'Already have an account? '}
               </Text>
               <TouchableOpacity onPress={toggleMode}>
-                <Text className="text-blue-500 font-semibold">
+                <Text style={styles.toggleLink}>
                   {isLogin ? 'Sign Up' : 'Login'}
                 </Text>
               </TouchableOpacity>
             </View>
 
             {/* Demo Credentials */}
-            <View className="mt-8 p-4 bg-gray-50 rounded-xl">
-              <Text className="text-gray-500 text-center text-sm">
+            <View style={styles.demoBox}>
+              <Text style={styles.demoText}>
                 💡 Demo: Use any email and password (6+ chars)
               </Text>
             </View>
@@ -137,6 +133,80 @@ const LoginScreen = () => {
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  flex: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: 24,
+    justifyContent: 'center',
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  icon: {
+    fontSize: 48,
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  subtitle: {
+    color: '#6b7280',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  errorBox: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 16,
+  },
+  errorText: {
+    color: '#dc2626',
+    textAlign: 'center',
+  },
+  form: {
+    marginBottom: 24,
+  },
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    marginTop: 24,
+  },
+  toggleText: {
+    color: '#6b7280',
+  },
+  toggleLink: {
+    color: '#3b82f6',
+    fontWeight: '600',
+  },
+  demoBox: {
+    marginTop: 32,
+    padding: 16,
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+  },
+  demoText: {
+    color: '#6b7280',
+    textAlign: 'center',
+    fontSize: 14,
+  },
+});
 
 export default LoginScreen;
 

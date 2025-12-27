@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Card from '../common/Card';
 import { getInitials, getPotentialColor, makePhoneCall, sendSMS } from '../../utils/helpers';
 import { BUSINESS_TYPES } from '../../utils/constants';
@@ -23,36 +23,34 @@ const ClientCard = ({ client, onPress, onCall, onMessage }) => {
   };
 
   return (
-    <Card onPress={onPress} variant="elevated" style={{ marginBottom: 12 }}>
-      <View className="flex-row items-center">
+    <Card onPress={onPress} variant="elevated" style={styles.cardContainer}>
+      <View style={styles.container}>
         {/* Avatar */}
         <View
-          className="w-14 h-14 rounded-full items-center justify-center mr-4"
-          style={{ backgroundColor: potentialColor + '20' }}
+          style={[styles.avatar, { backgroundColor: potentialColor + '20' }]}
         >
-          <Text className="text-lg font-bold" style={{ color: potentialColor }}>
+          <Text style={[styles.avatarText, { color: potentialColor }]}>
             {getInitials(client.clientName)}
           </Text>
         </View>
 
         {/* Client Info */}
-        <View className="flex-1">
-          <Text className="text-lg font-bold text-gray-800" numberOfLines={1}>
+        <View style={styles.clientInfo}>
+          <Text style={styles.clientName} numberOfLines={1}>
             {client.clientName}
           </Text>
           {client.companyName && (
-            <Text className="text-gray-500 text-sm" numberOfLines={1}>
+            <Text style={styles.companyName} numberOfLines={1}>
               {client.companyName}
             </Text>
           )}
-          <View className="flex-row items-center mt-1">
-            <Text className="text-gray-400 text-xs">📍 {businessType?.label || 'N/A'}</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.businessType}>📍 {businessType?.label || 'N/A'}</Text>
             {client.customerPotential && (
               <View
-                className="ml-2 px-2 py-0.5 rounded-full"
-                style={{ backgroundColor: potentialColor + '20' }}
+                style={[styles.potentialBadge, { backgroundColor: potentialColor + '20' }]}
               >
-                <Text className="text-xs font-medium capitalize" style={{ color: potentialColor }}>
+                <Text style={[styles.potentialText, { color: potentialColor }]}>
                   {client.customerPotential}
                 </Text>
               </View>
@@ -61,27 +59,27 @@ const ClientCard = ({ client, onPress, onCall, onMessage }) => {
         </View>
 
         {/* Action Buttons */}
-        <View className="flex-row">
+        <View style={styles.actionButtons}>
           <TouchableOpacity
             onPress={handleCall}
-            className="w-10 h-10 rounded-full bg-green-100 items-center justify-center mr-2"
+            style={styles.callButton}
           >
-            <Text className="text-lg">📞</Text>
+            <Text style={styles.actionIcon}>📞</Text>
           </TouchableOpacity>
           <TouchableOpacity
             onPress={handleMessage}
-            className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center"
+            style={styles.messageButton}
           >
-            <Text className="text-lg">💬</Text>
+            <Text style={styles.actionIcon}>💬</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Phone Number */}
-      <View className="mt-3 pt-3 border-t border-gray-100 flex-row items-center">
-        <Text className="text-gray-400 text-sm">📱 {client.phoneNumber}</Text>
+      <View style={styles.footer}>
+        <Text style={styles.phoneText}>📱 {client.phoneNumber}</Text>
         {client.location && (
-          <Text className="text-gray-400 text-sm ml-4">
+          <Text style={styles.locationText}>
             📍 {client.location.latitude.toFixed(4)}, {client.location.longitude.toFixed(4)}
           </Text>
         )}
@@ -89,6 +87,100 @@ const ClientCard = ({ client, onPress, onCall, onMessage }) => {
     </Card>
   );
 };
+
+const styles = StyleSheet.create({
+  cardContainer: {
+    marginBottom: 12,
+  },
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 16,
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  clientInfo: {
+    flex: 1,
+  },
+  clientName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  companyName: {
+    color: '#6b7280',
+    fontSize: 14,
+  },
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  businessType: {
+    color: '#9ca3af',
+    fontSize: 12,
+  },
+  potentialBadge: {
+    marginLeft: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 12,
+  },
+  potentialText: {
+    fontSize: 12,
+    fontWeight: '500',
+    textTransform: 'capitalize',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+  },
+  callButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#dcfce7',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  messageButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#dbeafe',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  actionIcon: {
+    fontSize: 18,
+  },
+  footer: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f3f4f6',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  phoneText: {
+    color: '#9ca3af',
+    fontSize: 14,
+  },
+  locationText: {
+    color: '#9ca3af',
+    fontSize: 14,
+    marginLeft: 16,
+  },
+});
 
 export default ClientCard;
 

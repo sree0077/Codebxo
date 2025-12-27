@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Alert } from 'react-native';
+import { View, Text, ScrollView, Alert, StyleSheet } from 'react-native';
 import { Input, Button, Dropdown } from '../common';
 import { BUSINESS_TYPES, CUSTOMER_POTENTIAL, USING_SYSTEM_OPTIONS } from '../../utils/constants';
 import { validateClientForm } from '../../utils/validators';
@@ -56,8 +56,8 @@ const ClientForm = ({ initialData = {}, onSubmit, isLoading = false, submitLabel
   };
 
   return (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <View className="p-4">
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
         <Input
           label="Client Name *"
           value={formData.clientName}
@@ -106,8 +106,8 @@ const ClientForm = ({ initialData = {}, onSubmit, isLoading = false, submitLabel
         />
 
         {/* Location Section */}
-        <View className="mb-4">
-          <Text className="text-gray-700 font-medium mb-2 text-base">GPS Location</Text>
+        <View style={styles.locationSection}>
+          <Text style={styles.locationLabel}>GPS Location</Text>
           <Button
             title={locationLoading ? 'Capturing...' : '📍 Capture Current Location'}
             onPress={handleCaptureLocation}
@@ -115,9 +115,9 @@ const ClientForm = ({ initialData = {}, onSubmit, isLoading = false, submitLabel
             loading={locationLoading}
           />
           {formData.location && (
-            <View className="mt-2 p-3 bg-green-50 rounded-xl">
-              <Text className="text-green-700 text-sm">
-                📍 Lat: {formData.location.latitude.toFixed(6)}, 
+            <View style={styles.locationInfo}>
+              <Text style={styles.locationText}>
+                📍 Lat: {formData.location.latitude.toFixed(6)},
                 Long: {formData.location.longitude.toFixed(6)}
               </Text>
             </View>
@@ -133,13 +133,45 @@ const ClientForm = ({ initialData = {}, onSubmit, isLoading = false, submitLabel
           numberOfLines={3}
         />
 
-        <View className="mt-4 mb-8">
+        <View style={styles.submitSection}>
           <Button title={submitLabel} onPress={handleSubmit} loading={isLoading} />
         </View>
       </View>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+  locationSection: {
+    marginBottom: 16,
+  },
+  locationLabel: {
+    color: '#374151',
+    fontWeight: '500',
+    marginBottom: 8,
+    fontSize: 16,
+  },
+  locationInfo: {
+    marginTop: 8,
+    padding: 12,
+    backgroundColor: '#f0fdf4',
+    borderRadius: 12,
+  },
+  locationText: {
+    color: '#15803d',
+    fontSize: 14,
+  },
+  submitSection: {
+    marginTop: 16,
+    marginBottom: 32,
+  },
+});
 
 export default ClientForm;
 

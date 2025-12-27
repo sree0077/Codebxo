@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, TouchableOpacity } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import { webInteractive } from '../../utils/webStyles';
 
 const Card = ({
   children,
@@ -8,38 +9,43 @@ const Card = ({
   padding = 'medium',
   style = {},
 }) => {
-  const getPaddingStyles = () => {
+  const getPaddingValue = () => {
     switch (padding) {
       case 'none':
-        return 'p-0';
+        return 0;
       case 'small':
-        return 'p-3';
+        return 12;
       case 'large':
-        return 'p-6';
+        return 24;
       default:
-        return 'p-4';
+        return 16;
     }
   };
 
-  const getVariantStyles = () => {
+  const getVariantStyle = () => {
     switch (variant) {
       case 'elevated':
-        return 'shadow-lg';
+        return styles.elevated;
       case 'outlined':
-        return 'border border-gray-200';
+        return styles.outlined;
       default:
-        return 'shadow-sm';
+        return styles.default;
     }
   };
 
-  const baseStyles = `bg-white rounded-2xl ${getPaddingStyles()} ${getVariantStyles()}`;
+  const cardStyle = [
+    styles.base,
+    getVariantStyle(),
+    { padding: getPaddingValue() },
+    onPress && webInteractive,
+    style,
+  ];
 
   if (onPress) {
     return (
       <TouchableOpacity
         onPress={onPress}
-        className={baseStyles}
-        style={style}
+        style={cardStyle}
         activeOpacity={0.7}
       >
         {children}
@@ -48,11 +54,36 @@ const Card = ({
   }
 
   return (
-    <View className={baseStyles} style={style}>
+    <View style={cardStyle}>
       {children}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  base: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+  },
+  default: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  elevated: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  outlined: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+});
 
 export default Card;
 

@@ -1,21 +1,29 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEYS } from '../../utils/constants';
+import {
+  loginUser as firebaseLogin,
+  registerUser as firebaseRegister,
+  logoutUser as firebaseLogout,
+  getCurrentUser
+} from '../../services/firebase';
 
-// Initial state
+// Initial state - start with isLoading: false to show login immediately
 const initialState = {
   user: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
   error: null,
 };
 
-// Async thunk for loading user from storage
+// Async thunk for loading user from Firebase auth state
 export const loadUser = createAsyncThunk('auth/loadUser', async () => {
   try {
-    const userJson = await AsyncStorage.getItem(STORAGE_KEYS.USER);
-    if (userJson) {
-      return JSON.parse(userJson);
+    const currentUser = getCurrentUser();
+    if (currentUser) {
+      return {
+        id: currentUser.uid,
+        email: currentUser.email,
+        displayName: currentUser.displayName || currentUser.email?.split('@')[0],
+      };
     }
     return null;
   } catch (error) {
@@ -24,55 +32,49 @@ export const loadUser = createAsyncThunk('auth/loadUser', async () => {
   }
 });
 
-// Async thunk for login
+// Async thunk for login with Firebase
 export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      // For demo purposes, we'll use mock authentication
-      // In production, replace with Firebase auth
-      if (email && password.length >= 6) {
-        const user = {
-          id: email.replace(/[^a-zA-Z0-9]/g, '_'),
-          email: email,
-          displayName: email.split('@')[0],
-          createdAt: new Date().toISOString(),
+      const result = await firebaseLogin(email, password);
+      if (result.success) {
+        return {
+          id: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName || result.user.email?.split('@')[0],
         };
-        await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
-        return user;
       }
-      throw new Error('Invalid credentials');
+      throw new Error(result.error || 'Login failed');
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Async thunk for registration
+// Async thunk for registration with Firebase
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      if (email && password.length >= 6) {
-        const user = {
-          id: email.replace(/[^a-zA-Z0-9]/g, '_'),
-          email: email,
-          displayName: email.split('@')[0],
-          createdAt: new Date().toISOString(),
+      const result = await firebaseRegister(email, password);
+      if (result.success) {
+        return {
+          id: result.user.uid,
+          email: result.user.email,
+          displayName: result.user.displayName || result.user.email?.split('@')[0],
         };
-        await AsyncStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
-        return user;
       }
-      throw new Error('Invalid registration data');
+      throw new Error(result.error || 'Registration failed');
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Async thunk for logout
+// Async thunk for logout with Firebase
 export const logoutUser = createAsyncThunk('auth/logoutUser', async () => {
-  await AsyncStorage.removeItem(STORAGE_KEYS.USER);
+  await firebaseLogout();
   return null;
 });
 

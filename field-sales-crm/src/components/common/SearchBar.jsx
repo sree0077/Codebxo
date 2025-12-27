@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, TextInput, TouchableOpacity, Text } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, StyleSheet } from 'react-native';
 
 const SearchBar = ({
   value,
@@ -8,23 +8,52 @@ const SearchBar = ({
   onClear,
 }) => {
   return (
-    <View className="flex-row items-center bg-gray-100 rounded-xl px-4 py-3 mb-4">
-      <Text className="text-gray-400 mr-3 text-lg">🔍</Text>
+    <View style={styles.container}>
+      <Text style={styles.icon}>🔍</Text>
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
         placeholderTextColor="#9ca3af"
-        className="flex-1 text-base text-gray-800"
+        style={styles.input}
       />
       {value.length > 0 && (
-        <TouchableOpacity onPress={onClear} className="p-1">
-          <Text className="text-gray-400 text-lg">✕</Text>
+        <TouchableOpacity onPress={onClear} style={styles.clearButton}>
+          <Text style={styles.clearIcon}>✕</Text>
         </TouchableOpacity>
       )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  icon: {
+    color: '#9ca3af',
+    marginRight: 12,
+    fontSize: 18,
+  },
+  input: {
+    flex: 1,
+    fontSize: 16,
+    color: '#1f2937',
+  },
+  clearButton: {
+    padding: 4,
+  },
+  clearIcon: {
+    color: '#9ca3af',
+    fontSize: 18,
+  },
+});
 
 export default SearchBar;
 

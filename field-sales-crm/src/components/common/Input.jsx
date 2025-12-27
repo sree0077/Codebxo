@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { webInput, webInteractive } from '../../utils/webStyles';
 
 const Input = ({
   label,
@@ -21,20 +22,19 @@ const Input = ({
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const getInputContainerStyle = () => {
+    let baseStyle = [styles.inputContainer];
+    if (isFocused) baseStyle.push(styles.inputFocused);
+    if (error) baseStyle.push(styles.inputError);
+    if (!editable) baseStyle.push(styles.inputDisabled);
+    return baseStyle;
+  };
+
   return (
-    <View className="mb-4" style={style}>
-      {label && (
-        <Text className="text-gray-700 font-medium mb-2 text-base">{label}</Text>
-      )}
-      <View
-        className={`
-          flex-row items-center bg-gray-50 rounded-xl border-2 px-4
-          ${isFocused ? 'border-blue-500 bg-white' : 'border-gray-200'}
-          ${error ? 'border-red-500' : ''}
-          ${!editable ? 'bg-gray-100' : ''}
-        `}
-      >
-        {icon && <View className="mr-3">{icon}</View>}
+    <View style={[styles.container, style]}>
+      {label && <Text style={styles.label}>{label}</Text>}
+      <View style={getInputContainerStyle()}>
+        {icon && <View style={styles.iconLeft}>{icon}</View>}
         <TextInput
           value={value}
           onChangeText={onChangeText}
@@ -48,27 +48,78 @@ const Input = ({
           editable={editable}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`
-            flex-1 py-3 text-gray-800 text-base
-            ${multiline ? 'min-h-[100px] textAlignVertical-top' : ''}
-          `}
-          style={multiline ? { textAlignVertical: 'top' } : {}}
+          style={[styles.input, multiline && styles.multilineInput, webInput]}
         />
         {secureTextEntry && (
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} className="p-2">
-            <Text className="text-gray-500">{showPassword ? '🙈' : '👁️'}</Text>
-          </TouchableOpacity>
+          <Pressable onPress={() => setShowPassword(!showPassword)} style={[styles.iconButton, webInteractive]}>
+            <Text style={styles.iconText}>{showPassword ? '🙈' : '👁️'}</Text>
+          </Pressable>
         )}
         {rightIcon && (
-          <TouchableOpacity onPress={onRightIconPress} className="p-2">
+          <Pressable onPress={onRightIconPress} style={[styles.iconButton, webInteractive]}>
             {rightIcon}
-          </TouchableOpacity>
+          </Pressable>
         )}
       </View>
-      {error && <Text className="text-red-500 text-sm mt-1">{error}</Text>}
+      {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: 16,
+  },
+  label: {
+    color: '#374151',
+    fontWeight: '500',
+    marginBottom: 8,
+    fontSize: 16,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f9fafb',
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    paddingHorizontal: 16,
+  },
+  inputFocused: {
+    borderColor: '#3b82f6',
+    backgroundColor: '#ffffff',
+  },
+  inputError: {
+    borderColor: '#ef4444',
+  },
+  inputDisabled: {
+    backgroundColor: '#f3f4f6',
+  },
+  iconLeft: {
+    marginRight: 12,
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 12,
+    color: '#1f2937',
+    fontSize: 16,
+  },
+  multilineInput: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  iconButton: {
+    padding: 8,
+  },
+  iconText: {
+    color: '#6b7280',
+  },
+  errorText: {
+    color: '#ef4444',
+    fontSize: 14,
+    marginTop: 4,
+  },
+});
 
 export default Input;
 

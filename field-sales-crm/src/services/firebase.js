@@ -1,52 +1,43 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  initializeAuth,
-  getReactNativePersistence,
+import {
+  getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
   onAuthStateChanged
 } from 'firebase/auth';
-import { 
-  getFirestore, 
-  collection, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  getDocs, 
-  updateDoc, 
-  deleteDoc, 
-  query, 
+import {
+  getFirestore,
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  query,
   where,
   orderBy,
-  serverTimestamp 
+  serverTimestamp
 } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 
-// Firebase configuration - Replace with your own config
+// Firebase configuration
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyAuxdtq-HGz7YxRREiPLphONLv65DrE9co",
+  authDomain: "codebxo-66cab.firebaseapp.com",
+  projectId: "codebxo-66cab",
+  storageBucket: "codebxo-66cab.firebasestorage.app",
+  messagingSenderId: "981206511276",
+  appId: "1:981206511276:web:aca4c5e60fea466e777909",
+  measurementId: "G-QFDS8GH1FH"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Auth with AsyncStorage persistence for React Native
-let auth;
-if (Platform.OS === 'web') {
-  auth = getAuth(app);
-} else {
-  auth = initializeAuth(app, {
-    persistence: getReactNativePersistence(AsyncStorage)
-  });
-}
+// Initialize Auth - use getAuth for both web and mobile
+// Firebase handles persistence automatically
+const auth = getAuth(app);
 
 // Initialize Firestore
 const db = getFirestore(app);
@@ -142,6 +133,55 @@ export const getClientsByUser = async (userId) => {
     return { success: true, clients };
   } catch (error) {
     return { success: false, error: error.message, clients: [] };
+  }
+};
+
+// Interaction CRUD Operations
+export const addInteraction = async (interactionData) => {
+  try {
+    const interactionRef = doc(collection(db, COLLECTIONS.INTERACTIONS));
+    await setDoc(interactionRef, {
+      ...interactionData,
+      id: interactionRef.id,
+      createdAt: serverTimestamp(),
+    });
+    return { success: true, id: interactionRef.id };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateInteraction = async (interactionId, interactionData) => {
+  try {
+    const interactionRef = doc(db, COLLECTIONS.INTERACTIONS, interactionId);
+    await updateDoc(interactionRef, interactionData);
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteInteraction = async (interactionId) => {
+  try {
+    await deleteDoc(doc(db, COLLECTIONS.INTERACTIONS, interactionId));
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const getInteractionsByUser = async (userId) => {
+  try {
+    const q = query(
+      collection(db, COLLECTIONS.INTERACTIONS),
+      where('userId', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    const interactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return { success: true, interactions };
+  } catch (error) {
+    return { success: false, error: error.message, interactions: [] };
   }
 };
 

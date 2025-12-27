@@ -1,5 +1,5 @@
 import React, { useCallback } from 'react';
-import { View, Text, SafeAreaView, FlatList, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, Text, SafeAreaView, FlatList, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { SearchBar, LoadingSpinner, EmptyState } from '../components/common';
 import { ClientCard } from '../components/client';
@@ -38,21 +38,21 @@ const ClientListScreen = () => {
   const keyExtractor = useCallback((item) => item.id, []);
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
+    <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View className="bg-white px-4 py-4 border-b border-gray-100">
-        <View className="flex-row items-center justify-between mb-4">
+      <View style={styles.header}>
+        <View style={styles.headerTop}>
           <View>
-            <Text className="text-2xl font-bold text-gray-800">Clients</Text>
-            <Text className="text-gray-500 text-sm">
+            <Text style={styles.title}>Clients</Text>
+            <Text style={styles.subtitle}>
               Welcome, {user?.displayName || 'User'}
             </Text>
           </View>
           <TouchableOpacity
             onPress={logout}
-            className="bg-gray-100 px-4 py-2 rounded-full"
+            style={styles.logoutButton}
           >
-            <Text className="text-gray-600">Logout</Text>
+            <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
         </View>
 
@@ -73,7 +73,7 @@ const ClientListScreen = () => {
           data={filteredClients}
           renderItem={renderClient}
           keyExtractor={keyExtractor}
-          contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+          contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={isLoading} onRefresh={refreshClients} />
@@ -93,14 +93,76 @@ const ClientListScreen = () => {
       {/* FAB - Add Client */}
       <TouchableOpacity
         onPress={handleAddClient}
-        className="absolute bottom-6 right-6 w-14 h-14 bg-blue-500 rounded-full items-center justify-center shadow-lg"
+        style={styles.fab}
         activeOpacity={0.8}
       >
-        <Text className="text-white text-2xl">+</Text>
+        <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
     </SafeAreaView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f9fafb',
+  },
+  header: {
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f3f4f6',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  subtitle: {
+    color: '#6b7280',
+    fontSize: 14,
+  },
+  logoutButton: {
+    backgroundColor: '#f3f4f6',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  logoutText: {
+    color: '#4b5563',
+  },
+  listContent: {
+    padding: 16,
+    flexGrow: 1,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    backgroundColor: '#3b82f6',
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fabText: {
+    color: '#ffffff',
+    fontSize: 24,
+  },
+});
 
 export default ClientListScreen;
 

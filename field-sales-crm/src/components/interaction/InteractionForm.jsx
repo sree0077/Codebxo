@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, ScrollView, Platform } from 'react-native';
+import { View, Text, ScrollView, Platform, StyleSheet } from 'react-native';
 import { Input, Button, Dropdown } from '../common';
 import { INTERACTION_TYPES } from '../../utils/constants';
 import { validateInteractionForm } from '../../utils/validators';
@@ -58,10 +58,10 @@ const InteractionForm = ({
   };
 
   return (
-    <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-      <View className="p-4">
-        <View className="bg-blue-50 rounded-xl p-3 mb-4">
-          <View className="text-blue-700 text-sm">Client: {clientName}</View>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
+      <View style={styles.content}>
+        <View style={styles.clientInfo}>
+          <Text style={styles.clientText}>Client: {clientName}</Text>
         </View>
 
         <Dropdown
@@ -92,13 +92,13 @@ const InteractionForm = ({
         />
 
         {/* Follow-up Date */}
-        <View className="mb-4">
+        <View style={styles.dateSection}>
           <Input
             label="Follow-up Date"
             value={formatDateDisplay(formData.followUpDate)}
             placeholder="Select follow-up date"
             editable={false}
-            rightIcon={<View><View className="text-gray-400">📅</View></View>}
+            rightIcon={<Text style={styles.calendarIcon}>📅</Text>}
             onRightIconPress={() => setShowDatePicker(true)}
           />
           <Button
@@ -117,7 +117,7 @@ const InteractionForm = ({
           />
         )}
 
-        <View className="mt-4 mb-8">
+        <View style={styles.submitSection}>
           <Button
             title="Save Interaction"
             onPress={handleSubmit}
@@ -128,6 +128,35 @@ const InteractionForm = ({
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    padding: 16,
+  },
+  clientInfo: {
+    backgroundColor: '#eff6ff',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 16,
+  },
+  clientText: {
+    color: '#1d4ed8',
+    fontSize: 14,
+  },
+  dateSection: {
+    marginBottom: 16,
+  },
+  calendarIcon: {
+    color: '#9ca3af',
+  },
+  submitSection: {
+    marginTop: 16,
+    marginBottom: 32,
+  },
+});
 
 export default InteractionForm;
 

@@ -14,10 +14,7 @@ export const useAuth = () => {
   const dispatch = useDispatch();
   const { user, isAuthenticated, isLoading, error } = useSelector((state) => state.auth);
 
-  // Load user on mount
-  useEffect(() => {
-    dispatch(loadUser());
-  }, [dispatch]);
+  // Removed loadUser() call from here - it's now handled at app level in Navigation component
 
   // Login handler
   const login = useCallback(

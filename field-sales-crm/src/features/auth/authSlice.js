@@ -17,14 +17,19 @@ const initialState = {
 // Async thunk for loading user from Firebase auth state
 export const loadUser = createAsyncThunk('auth/loadUser', async () => {
   try {
+    // Add a small delay to ensure Firebase is initialized
+    await new Promise(resolve => setTimeout(resolve, 100));
+
     const currentUser = getCurrentUser();
     if (currentUser) {
+      console.log('User loaded:', currentUser.email);
       return {
         id: currentUser.uid,
         email: currentUser.email,
         displayName: currentUser.displayName || currentUser.email?.split('@')[0],
       };
     }
+    console.log('No user found');
     return null;
   } catch (error) {
     console.error('Error loading user:', error);

@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
+import { loadUser } from '../features/auth/authSlice';
 import { SCREENS } from '../utils/constants';
 import {
   LoginScreen,
@@ -69,7 +70,13 @@ const LoadingScreen = () => (
 );
 
 const Navigation = () => {
+  const dispatch = useDispatch();
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
+
+  // Load user on app initialization
+  useEffect(() => {
+    dispatch(loadUser());
+  }, [dispatch]);
 
   // Show loading only briefly, then default to login
   if (isLoading) {

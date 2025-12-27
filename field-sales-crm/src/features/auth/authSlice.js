@@ -3,7 +3,7 @@ import {
   loginUser as firebaseLogin,
   registerUser as firebaseRegister,
   logoutUser as firebaseLogout,
-  getCurrentUser
+  onAuthChange
 } from '../../services/firebase';
 
 // Initial state - start with isLoading: false to show login immediately
@@ -15,21 +15,26 @@ const initialState = {
 };
 
 // Async thunk for loading user from Firebase auth state
+// This uses onAuthStateChanged to wait for Firebase to restore the session
 export const loadUser = createAsyncThunk('auth/loadUser', async () => {
   try {
-    // Add a small delay to ensure Firebase is initialized
-    await new Promise(resolve => setTimeout(resolve, 100));
+    // Use a promise to wait for Firebase auth state to be determined
+    const user = await new Promise((resolve) => {
+      const unsubscribe = onAuthChange((user) => {
+        unsubscribe(); // Unsubscribe immediately after first call
+        resolve(user);
+      });
+    });
 
-    const currentUser = getCurrentUser();
-    if (currentUser) {
-      console.log('User loaded:', currentUser.email);
+    if (user) {
+      console.log('User loaded from Firebase:', user.email);
       return {
-        id: currentUser.uid,
-        email: currentUser.email,
-        displayName: currentUser.displayName || currentUser.email?.split('@')[0],
+        id: user.uid,
+        email: user.email,
+        displayName: user.displayName || user.email?.split('@')[0],
       };
     }
-    console.log('No user found');
+    console.log('No user found in Firebase auth state');
     return null;
   } catch (error) {
     console.error('Error loading user:', error);

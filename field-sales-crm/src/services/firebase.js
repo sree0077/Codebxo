@@ -94,6 +94,7 @@ export const COLLECTIONS = {
 // Client CRUD Operations
 export const addClient = async (clientData) => {
   try {
+    console.log('[FIREBASE] ➕ Adding client to Firestore:', clientData.clientName);
     const clientRef = doc(collection(db, COLLECTIONS.CLIENTS));
     await setDoc(clientRef, {
       ...clientData,
@@ -101,8 +102,10 @@ export const addClient = async (clientData) => {
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp(),
     });
+    console.log('[FIREBASE] ✅ Client added with ID:', clientRef.id);
     return { success: true, id: clientRef.id };
   } catch (error) {
+    console.error('[FIREBASE] ❌ Error adding client:', error.message);
     return { success: false, error: error.message };
   }
 };
@@ -131,6 +134,7 @@ export const deleteClient = async (clientId) => {
 
 export const getClientsByUser = async (userId) => {
   try {
+    console.log('[FIREBASE] 📥 Fetching clients for user:', userId);
     const q = query(
       collection(db, COLLECTIONS.CLIENTS),
       where('userId', '==', userId),
@@ -138,10 +142,13 @@ export const getClientsByUser = async (userId) => {
     );
     const snapshot = await getDocs(q);
     const clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log('[FIREBASE] ✅ Fetched', clients.length, 'clients');
     return { success: true, clients };
   } catch (error) {
+    console.warn('[FIREBASE] ⚠️ Query with orderBy failed:', error.code);
     // If orderBy fails (missing index), try without orderBy
     if (error.code === 'failed-precondition' || error.message.includes('index')) {
+      console.log('[FIREBASE] 🔄 Retrying without orderBy...');
       try {
         const q = query(
           collection(db, COLLECTIONS.CLIENTS),
@@ -155,11 +162,14 @@ export const getClientsByUser = async (userId) => {
           const dateB = b.createdAt?.toDate?.() || new Date(b.createdAt);
           return dateB - dateA;
         });
+        console.log('[FIREBASE] ✅ Fetched', clients.length, 'clients (manual sort)');
         return { success: true, clients };
       } catch (retryError) {
+        console.error('[FIREBASE] ❌ Retry failed:', retryError.message);
         return { success: false, error: retryError.message, clients: [] };
       }
     }
+    console.error('[FIREBASE] ❌ Error fetching clients:', error.message);
     return { success: false, error: error.message, clients: [] };
   }
 };

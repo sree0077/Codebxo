@@ -19,6 +19,7 @@ export const loadClients = createAsyncThunk(
   'clients/loadClients',
   async (userId, { rejectWithValue }) => {
     try {
+      console.log('[CLIENTS] 📥 Loading clients for user:', userId);
       const result = await getClientsByUser(userId);
       if (result.success) {
         // Convert Firestore timestamps to ISO strings
@@ -27,10 +28,13 @@ export const loadClients = createAsyncThunk(
           createdAt: client.createdAt?.toDate?.()?.toISOString() || client.createdAt,
           updatedAt: client.updatedAt?.toDate?.()?.toISOString() || client.updatedAt,
         }));
+        console.log('[CLIENTS] ✅ Loaded', clients.length, 'clients');
         return clients;
       }
+      console.log('[CLIENTS] ⚠️ No clients found');
       return [];
     } catch (error) {
+      console.error('[CLIENTS] ❌ Error loading clients:', error.message);
       return rejectWithValue(error.message);
     }
   }
@@ -41,11 +45,13 @@ export const addClient = createAsyncThunk(
   'clients/addClient',
   async ({ userId, clientData }, { rejectWithValue }) => {
     try {
+      console.log('[CLIENTS] ➕ Adding new client:', clientData.clientName);
       const result = await firebaseAddClient({
         ...clientData,
         userId,
       });
       if (result.success) {
+        console.log('[CLIENTS] ✅ Client added successfully:', result.id);
         return {
           ...clientData,
           id: result.id,
@@ -54,8 +60,10 @@ export const addClient = createAsyncThunk(
           updatedAt: new Date().toISOString(),
         };
       }
+      console.error('[CLIENTS] ❌ Failed to add client:', result.error);
       throw new Error(result.error || 'Failed to add client');
     } catch (error) {
+      console.error('[CLIENTS] ❌ Error adding client:', error.message);
       return rejectWithValue(error.message);
     }
   }

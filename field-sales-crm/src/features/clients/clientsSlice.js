@@ -19,17 +19,22 @@ export const loadClients = createAsyncThunk(
   'clients/loadClients',
   async (userId, { rejectWithValue }) => {
     try {
+      console.log('loadClients thunk called for userId:', userId);
       const result = await getClientsByUser(userId);
       if (result.success) {
         // Convert Firestore timestamps to ISO strings
-        return result.clients.map(client => ({
+        const clients = result.clients.map(client => ({
           ...client,
           createdAt: client.createdAt?.toDate?.()?.toISOString() || client.createdAt,
           updatedAt: client.updatedAt?.toDate?.()?.toISOString() || client.updatedAt,
         }));
+        console.log('loadClients returning:', clients.length, 'clients');
+        return clients;
       }
+      console.log('loadClients failed, returning empty array');
       return [];
     } catch (error) {
+      console.error('loadClients error:', error);
       return rejectWithValue(error.message);
     }
   }
@@ -111,13 +116,16 @@ const clientsSlice = createSlice({
     builder
       // Load Clients
       .addCase(loadClients.pending, (state) => {
+        console.log('loadClients.pending');
         state.isLoading = true;
       })
       .addCase(loadClients.fulfilled, (state, action) => {
+        console.log('loadClients.fulfilled with', action.payload.length, 'clients');
         state.items = action.payload;
         state.isLoading = false;
       })
       .addCase(loadClients.rejected, (state, action) => {
+        console.log('loadClients.rejected:', action.payload);
         state.isLoading = false;
         state.error = action.payload;
       })

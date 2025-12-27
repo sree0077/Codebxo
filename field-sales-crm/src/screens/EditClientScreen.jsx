@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { SafeAreaView, Alert, Text, StyleSheet } from 'react-native';
+import { SafeAreaView, Alert, Platform, Text, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { ClientForm } from '../components/client';
 import { useClients } from '../hooks/useClients';
@@ -19,9 +19,14 @@ const EditClientScreen = () => {
     try {
       const result = await editClient(clientId, clientData);
       if (result.success) {
-        Alert.alert('Success', 'Client updated successfully!', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+        // On web, navigate immediately. On mobile, show alert first
+        if (Platform.OS === 'web') {
+          navigation.goBack();
+        } else {
+          Alert.alert('Success', 'Client updated successfully!', [
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ]);
+        }
       } else {
         Alert.alert('Error', result.error || 'Failed to update client');
       }

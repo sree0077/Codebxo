@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Alert, StyleSheet } from 'react-native';
+import { SafeAreaView, Alert, Platform, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ClientForm } from '../components/client';
 import { useClients } from '../hooks/useClients';
@@ -14,9 +14,14 @@ const AddClientScreen = () => {
     try {
       const result = await createClient(clientData);
       if (result.success) {
-        Alert.alert('Success', 'Client added successfully!', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+        // On web, navigate immediately. On mobile, show alert first
+        if (Platform.OS === 'web') {
+          navigation.goBack();
+        } else {
+          Alert.alert('Success', 'Client added successfully!', [
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ]);
+        }
       } else {
         Alert.alert('Error', result.error || 'Failed to add client');
       }

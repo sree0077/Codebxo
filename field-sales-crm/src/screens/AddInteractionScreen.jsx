@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, View, Text, Alert, StyleSheet } from 'react-native';
+import { SafeAreaView, ScrollView, View, Text, Alert, Platform, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Input, Button, Dropdown } from '../components/common';
 import { useInteractions } from '../hooks/useInteractions';
@@ -47,9 +47,14 @@ const AddInteractionScreen = () => {
       
       const result = await createInteraction(interactionData);
       if (result.success) {
-        Alert.alert('Success', 'Interaction added successfully!', [
-          { text: 'OK', onPress: () => navigation.goBack() },
-        ]);
+        // On web, navigate immediately. On mobile, show alert first
+        if (Platform.OS === 'web') {
+          navigation.goBack();
+        } else {
+          Alert.alert('Success', 'Interaction added successfully!', [
+            { text: 'OK', onPress: () => navigation.goBack() },
+          ]);
+        }
       } else {
         Alert.alert('Error', result.error || 'Failed to add interaction');
       }

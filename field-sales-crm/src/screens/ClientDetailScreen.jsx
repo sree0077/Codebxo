@@ -1,5 +1,5 @@
-import React, { useMemo, useCallback } from 'react';
-import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Alert, StyleSheet } from 'react-native';
+import React, { useMemo, useCallback, useEffect } from 'react';
+import { View, Text, SafeAreaView, ScrollView, TouchableOpacity, Alert, Platform, StyleSheet } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Card, Button } from '../components/common';
 import { InteractionCard } from '../components/interaction';
@@ -12,12 +12,25 @@ const ClientDetailScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
   const { clientId } = route.params;
-  
-  const { getClientById, removeClient } = useClients();
+
+  const { getClientById, removeClient, refreshClients } = useClients();
   const { getClientInteractions, removeInteraction } = useInteractions();
-  
-  const client = useMemo(() => getClientById(clientId), [clientId, getClientById]);
+
+  const client = useMemo(() => {
+    const foundClient = getClientById(clientId);
+    console.log('ClientDetailScreen - client:', foundClient ? 'found' : 'not found', 'for id:', clientId);
+    return foundClient;
+  }, [clientId, getClientById]);
+
   const interactions = useMemo(() => getClientInteractions(clientId), [clientId, getClientInteractions]);
+
+  // If client is not found, try refreshing clients
+  useEffect(() => {
+    if (!client) {
+      console.log('Client not found, refreshing clients...');
+      refreshClients();
+    }
+  }, [client, refreshClients]);
 
   const businessType = BUSINESS_TYPES.find((b) => b.value === client?.businessType);
   const potential = CUSTOMER_POTENTIAL.find((p) => p.value === client?.customerPotential);
@@ -28,17 +41,27 @@ const ClientDetailScreen = () => {
   }, [navigation, clientId]);
 
   const handleDelete = useCallback(() => {
-    Alert.alert('Delete Client', 'Are you sure you want to delete this client?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: async () => {
-          await removeClient(clientId);
+    if (Platform.OS === 'web') {
+      // On web, use confirm dialog
+      if (window.confirm('Are you sure you want to delete this client?')) {
+        removeClient(clientId).then(() => {
           navigation.goBack();
+        });
+      }
+    } else {
+      // On mobile, use Alert
+      Alert.alert('Delete Client', 'Are you sure you want to delete this client?', [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            await removeClient(clientId);
+            navigation.goBack();
+          },
         },
-      },
-    ]);
+      ]);
+    }
   }, [clientId, removeClient, navigation]);
 
   const handleAddInteraction = useCallback(() => {

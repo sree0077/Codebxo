@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, Platform } from 'react-native';
 import { webInput, webInteractive } from '../../utils/webStyles';
 
 const Input = ({
@@ -48,15 +48,31 @@ const Input = ({
           editable={editable}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          style={[styles.input, multiline && styles.multilineInput, webInput].filter(Boolean)}
+          style={[
+            styles.input,
+            multiline && styles.multilineInput,
+            ...(Platform.OS === 'web' ? [webInput] : [])
+          ]}
         />
         {secureTextEntry && (
-          <Pressable onPress={() => setShowPassword(!showPassword)} style={[styles.iconButton, webInteractive].filter(Boolean)}>
+          <Pressable
+            onPress={() => setShowPassword(!showPassword)}
+            style={[
+              styles.iconButton,
+              ...(Platform.OS === 'web' ? [webInteractive] : [])
+            ]}
+          >
             <Text style={styles.iconText}>{showPassword ? '🙈' : '👁️'}</Text>
           </Pressable>
         )}
         {rightIcon && (
-          <Pressable onPress={onRightIconPress} style={[styles.iconButton, webInteractive].filter(Boolean)}>
+          <Pressable
+            onPress={onRightIconPress}
+            style={[
+              styles.iconButton,
+              ...(Platform.OS === 'web' ? [webInteractive] : [])
+            ]}
+          >
             {rightIcon}
           </Pressable>
         )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, FlatList, SafeAreaView, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, FlatList, SafeAreaView, StyleSheet, Platform } from 'react-native';
 import { webInteractive, webDisabled } from '../../utils/webStyles';
 
 const Dropdown = ({
@@ -31,8 +31,8 @@ const Dropdown = ({
           styles.selector,
           error && styles.selectorError,
           disabled && styles.selectorDisabled,
-          disabled ? webDisabled : webInteractive,
-        ].filter(Boolean)}
+          ...(Platform.OS === 'web' ? [disabled ? webDisabled : webInteractive] : []),
+        ]}
         activeOpacity={0.7}
       >
         <Text style={[
@@ -70,8 +70,8 @@ const Dropdown = ({
                   style={[
                     styles.option,
                     item.value === value && styles.optionSelected,
-                    webInteractive,
-                  ].filter(Boolean)}
+                    ...(Platform.OS === 'web' ? [webInteractive] : []),
+                  ]}
                 >
                   <Text
                     style={[

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, Text, ActivityIndicator, View, StyleSheet } from 'react-native';
+import { Pressable, Text, ActivityIndicator, View, StyleSheet, Platform } from 'react-native';
 import { webInteractive, webDisabled } from '../../utils/webStyles';
 
 const Button = ({
@@ -72,9 +72,9 @@ const Button = ({
         fullWidth && styles.fullWidth,
         disabled && styles.disabled,
         pressed && styles.pressed,
-        disabled || loading ? webDisabled : webInteractive,
+        ...(Platform.OS === 'web' ? [disabled || loading ? webDisabled : webInteractive] : []),
         style,
-      ].filter(Boolean)}
+      ]}
     >
       {loading ? (
         <ActivityIndicator color={variant === 'secondary' || variant === 'outline' ? '#3b82f6' : '#ffffff'} />

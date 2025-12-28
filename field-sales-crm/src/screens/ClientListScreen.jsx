@@ -28,6 +28,10 @@ const ClientListScreen = () => {
     navigation.navigate(SCREENS.ADD_CLIENT);
   }, [navigation]);
 
+  const handleMapView = useCallback(() => {
+    navigation.navigate(SCREENS.MAP_VIEW);
+  }, [navigation]);
+
   const renderClient = useCallback(({ item }) => (
     <ClientCard
       client={item}
@@ -66,6 +70,15 @@ const ClientListScreen = () => {
           placeholder="Search clients..."
           onClear={() => updateSearchQuery('')}
         />
+
+        {/* Map View Button */}
+        <TouchableOpacity
+          onPress={handleMapView}
+          style={styles.mapViewButton}
+        >
+          <Text style={styles.mapViewIcon}>🗺️</Text>
+          <Text style={styles.mapViewText}>Map View</Text>
+        </TouchableOpacity>
       </View>
 
       {/* Content */}
@@ -148,6 +161,25 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     color: '#4b5563',
+  },
+  mapViewButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#3b82f6',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    marginTop: 12,
+    gap: 8,
+  },
+  mapViewIcon: {
+    fontSize: 18,
+  },
+  mapViewText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
   listContent: {
     padding: 16,

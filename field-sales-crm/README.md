@@ -28,6 +28,10 @@ A comprehensive CRM (Customer Relationship Management) application for field sal
 - ✅ **Client Search**: Real-time search functionality
 - ✅ **Follow-up Reminders**: Track upcoming follow-ups
 - ✅ **Data Persistence**: All data cached locally for offline access
+- ✅ **Google Maps Integration**: Interactive map view with client locations
+- ✅ **Route Planning**: Optimized route calculation for multiple clients
+- ✅ **Turn-by-Turn Directions**: Navigate between client locations
+- ✅ **Distance & Time Estimates**: Calculate travel distance and duration
 
 ## 🏗️ Architecture
 
@@ -39,14 +43,15 @@ src/
 ├── components/             # Reusable UI components
 │   ├── common/            # Generic components (Button, Input, etc.)
 │   ├── client/            # Client-specific components
-│   └── interaction/       # Interaction components
+│   ├── interaction/       # Interaction components
+│   └── maps/              # Map components (MapView, Markers, Routes)
 ├── features/              # Redux slices (Feature-based state)
 │   ├── auth/
 │   ├── clients/
 │   └── interactions/
 ├── hooks/                 # Custom React hooks
 ├── screens/               # Screen components
-├── services/              # API/Firebase services
+├── services/              # API/Firebase services (including mapsService)
 └── utils/                 # Constants, validators, helpers
 ```
 
@@ -60,6 +65,7 @@ src/
 | Styling | NativeWind (Tailwind CSS) |
 | Storage | AsyncStorage |
 | Location | expo-location |
+| Maps | Google Maps API + react-native-maps |
 | Backend | Firebase (Optional) |
 
 ## 🚀 Getting Started
@@ -136,6 +142,31 @@ npm run web
    - Fill in client details
    - Click "Add Client"
    - You'll be automatically redirected to the client list
+
+### Google Maps Setup (Optional but Recommended)
+
+To enable the Maps feature with route planning:
+
+1. **Get Google Maps API Keys:**
+   - Follow the detailed guide in [GOOGLE_MAPS_SETUP.md](GOOGLE_MAPS_SETUP.md)
+   - You'll need API keys for Web, Android, and iOS
+
+2. **Configure API Keys:**
+   ```bash
+   # Copy the example env file
+   cp .env.example .env
+
+   # Edit .env and add your API keys
+   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_WEB=your_web_key
+   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID=your_android_key
+   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS=your_ios_key
+   ```
+
+3. **Using the Maps Feature:**
+   - See [MAPS_FEATURE_GUIDE.md](MAPS_FEATURE_GUIDE.md) for detailed usage instructions
+   - View clients on interactive map
+   - Plan optimized routes
+   - Get turn-by-turn directions
 
 ## 📱 Building for Production
 

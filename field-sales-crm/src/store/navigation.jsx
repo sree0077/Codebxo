@@ -13,6 +13,7 @@ import {
   AddClientScreen,
   EditClientScreen,
   AddInteractionScreen,
+  MapViewScreen,
 } from '../screens';
 
 const Stack = createNativeStackNavigator();
@@ -58,6 +59,11 @@ const MainStack = () => (
       name={SCREENS.ADD_INTERACTION}
       component={AddInteractionScreen}
       options={{ title: 'Add Interaction' }}
+    />
+    <Stack.Screen
+      name={SCREENS.MAP_VIEW}
+      component={MapViewScreen}
+      options={{ title: 'Map View' }}
     />
   </Stack.Navigator>
 );

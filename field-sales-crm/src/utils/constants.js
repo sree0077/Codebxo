@@ -76,5 +76,6 @@ export const SCREENS = {
   EDIT_CLIENT: 'EditClient',
   INTERACTIONS: 'Interactions',
   ADD_INTERACTION: 'AddInteraction',
+  MAP_VIEW: 'MapView',
 };
 

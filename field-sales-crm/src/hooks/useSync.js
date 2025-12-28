@@ -29,14 +29,16 @@ export const useSync = () => {
     try {
       // Process sync queue (pending offline operations)
       const result = await processSyncQueue();
-      
-      // Reload data from Firebase
+
+      // Reload data from Firebase to get fresh data with real IDs
+      // This will also clean up temp IDs from local storage
+      console.log('[SYNC] 🔄 Reloading data from Firebase...');
       await dispatch(loadClients(user.id));
       await dispatch(loadInteractions(user.id));
 
       setLastSyncTime(new Date());
       console.log('[SYNC] ✅ Sync completed successfully');
-      
+
       return { success: true, ...result };
     } catch (error) {
       console.error('[SYNC] ❌ Sync failed:', error);

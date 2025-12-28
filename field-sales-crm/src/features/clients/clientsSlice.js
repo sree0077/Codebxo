@@ -183,7 +183,9 @@ const clientsSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(loadClients.fulfilled, (state, action) => {
-        state.items = action.payload;
+        // Remove any items with temporary IDs before loading fresh data
+        const freshData = action.payload.filter(item => !item.id.startsWith('temp_'));
+        state.items = freshData;
         state.isLoading = false;
       })
       .addCase(loadClients.rejected, (state, action) => {
@@ -195,7 +197,11 @@ const clientsSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(addClient.fulfilled, (state, action) => {
-        state.items.unshift(action.payload);
+        // Check if client already exists (prevent duplicates)
+        const exists = state.items.some(item => item.id === action.payload.id);
+        if (!exists) {
+          state.items.unshift(action.payload);
+        }
         state.isLoading = false;
       })
       .addCase(addClient.rejected, (state, action) => {

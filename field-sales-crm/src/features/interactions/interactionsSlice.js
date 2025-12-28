@@ -169,7 +169,9 @@ const interactionsSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(loadInteractions.fulfilled, (state, action) => {
-        state.items = action.payload;
+        // Remove any items with temporary IDs before loading fresh data
+        const freshData = action.payload.filter(item => !item.id.startsWith('temp_'));
+        state.items = freshData;
         state.isLoading = false;
       })
       .addCase(loadInteractions.rejected, (state, action) => {
@@ -178,7 +180,11 @@ const interactionsSlice = createSlice({
       })
       // Add Interaction
       .addCase(addInteraction.fulfilled, (state, action) => {
-        state.items.unshift(action.payload);
+        // Check if interaction already exists (prevent duplicates)
+        const exists = state.items.some(item => item.id === action.payload.id);
+        if (!exists) {
+          state.items.unshift(action.payload);
+        }
       })
       // Update Interaction
       .addCase(updateInteraction.fulfilled, (state, action) => {

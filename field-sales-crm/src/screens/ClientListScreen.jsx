@@ -1,7 +1,7 @@
 import React, { useCallback } from 'react';
 import { View, Text, SafeAreaView, FlatList, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { SearchBar, LoadingSpinner, EmptyState } from '../components/common';
+import { SearchBar, LoadingSpinner, EmptyState, OnlineStatusIndicator } from '../components/common';
 import { ClientCard } from '../components/client';
 import { useClients } from '../hooks/useClients';
 import { useAuth } from '../hooks/useAuth';
@@ -42,18 +42,21 @@ const ClientListScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerTop}>
-          <View>
+          <View style={styles.headerLeft}>
             <Text style={styles.title}>Clients</Text>
             <Text style={styles.subtitle}>
               Welcome, {user?.displayName || 'User'}
             </Text>
           </View>
-          <TouchableOpacity
-            onPress={logout}
-            style={styles.logoutButton}
-          >
-            <Text style={styles.logoutText}>Logout</Text>
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <OnlineStatusIndicator />
+            <TouchableOpacity
+              onPress={logout}
+              style={styles.logoutButton}
+            >
+              <Text style={styles.logoutText}>Logout</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Search Bar */}
@@ -116,9 +119,16 @@ const styles = StyleSheet.create({
   },
   headerTop: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     justifyContent: 'space-between',
     marginBottom: 16,
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    alignItems: 'flex-end',
+    gap: 8,
   },
   title: {
     fontSize: 24,
@@ -134,6 +144,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
+    marginTop: 4,
   },
   logoutText: {
     color: '#4b5563',

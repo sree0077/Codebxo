@@ -16,12 +16,8 @@ export const useClients = () => {
   );
   const { user } = useSelector((state) => state.auth);
 
-  // Load clients when user changes
-  useEffect(() => {
-    if (user?.id) {
-      dispatch(loadClients(user.id));
-    }
-  }, [dispatch, user?.id]);
+  // NOTE: Loading is handled by useSync hook in Navigation component
+  // We don't load here to avoid duplicate loads and race conditions
 
   // Filtered clients based on search query
   const filteredClients = useMemo(() => {

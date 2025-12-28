@@ -12,12 +12,8 @@ export const useInteractions = () => {
   const { items, isLoading, error } = useSelector((state) => state.interactions);
   const { user } = useSelector((state) => state.auth);
 
-  // Load interactions when user changes
-  useEffect(() => {
-    if (user?.id) {
-      dispatch(loadInteractions(user.id));
-    }
-  }, [dispatch, user?.id]);
+  // NOTE: Loading is handled by useSync hook in Navigation component
+  // We don't load here to avoid duplicate loads and race conditions
 
   // Get interactions for a specific client
   const getClientInteractions = useCallback(

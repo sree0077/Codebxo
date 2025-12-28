@@ -169,10 +169,29 @@ const interactionsSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(loadInteractions.fulfilled, (state, action) => {
-        // Remove any items with temporary IDs before loading fresh data
-        const freshData = action.payload.filter(item => !item.id.startsWith('temp_'));
-        state.items = freshData;
+        console.log('[INTERACTIONS] 📥 loadInteractions.fulfilled - Received', action.payload.length, 'interactions');
+
+        // Simply replace with fresh data from Firebase/storage
+        // Filter out any temp IDs that might be in the payload
+        const freshData = action.payload.filter(item => !item.id?.startsWith('temp_'));
+
+        // Remove duplicates by ID (keep first occurrence)
+        const uniqueInteractions = [];
+        const seenIds = new Set();
+
+        for (const interaction of freshData) {
+          if (!seenIds.has(interaction.id)) {
+            seenIds.add(interaction.id);
+            uniqueInteractions.push(interaction);
+          } else {
+            console.warn('[INTERACTIONS] ⚠️ Duplicate ID found:', interaction.id);
+          }
+        }
+
+        state.items = uniqueInteractions;
         state.isLoading = false;
+
+        console.log('[INTERACTIONS] ✅ Final state:', uniqueInteractions.length, 'unique interactions');
       })
       .addCase(loadInteractions.rejected, (state, action) => {
         state.isLoading = false;

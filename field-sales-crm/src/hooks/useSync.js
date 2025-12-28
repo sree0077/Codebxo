@@ -23,12 +23,21 @@ export const useSync = () => {
       return { success: false };
     }
 
+    if (isSyncing) {
+      console.log('[SYNC] ⚠️ Sync already in progress, skipping...');
+      return { success: false, message: 'Sync in progress' };
+    }
+
     setIsSyncing(true);
     console.log('[SYNC] 🔄 Starting sync...');
 
     try {
       // Process sync queue (pending offline operations)
       const result = await processSyncQueue();
+      console.log('[SYNC] ✅ Sync queue processed:', result);
+
+      // Small delay to ensure Firebase has processed everything
+      await new Promise(resolve => setTimeout(resolve, 500));
 
       // Reload data from Firebase to get fresh data with real IDs
       // This will also clean up temp IDs from local storage
@@ -46,7 +55,7 @@ export const useSync = () => {
     } finally {
       setIsSyncing(false);
     }
-  }, [dispatch, user?.id, isOnline]);
+  }, [dispatch, user?.id, isOnline, isSyncing]);
 
   // Handle online event
   const handleOnline = useCallback(() => {

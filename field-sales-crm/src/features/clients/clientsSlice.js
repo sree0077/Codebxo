@@ -90,7 +90,11 @@ export const addClient = createAsyncThunk(
 
       // Save updated clients to local storage
       const state = getState();
-      const updatedClients = [newClient, ...state.clients.items];
+      // Filter out temp IDs before saving (except the one we just created)
+      const existingClients = state.clients.items.filter(c =>
+        !c.id.startsWith('temp_') || c.id === newClient.id
+      );
+      const updatedClients = [newClient, ...existingClients];
       await saveClients(updatedClients);
 
       return newClient;
@@ -183,10 +187,31 @@ const clientsSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(loadClients.fulfilled, (state, action) => {
-        // Remove any items with temporary IDs before loading fresh data
-        const freshData = action.payload.filter(item => !item.id.startsWith('temp_'));
-        state.items = freshData;
+        console.log('[CLIENTS] 📥 loadClients.fulfilled - Received', action.payload.length, 'clients');
+        console.log('[CLIENTS] 📥 Current state has', state.items.length, 'clients');
+
+        // Simply replace with fresh data from Firebase/storage
+        // Filter out any temp IDs that might be in the payload
+        const freshData = action.payload.filter(item => !item.id?.startsWith('temp_'));
+        console.log('[CLIENTS] 🔍 After filtering temp IDs:', freshData.length, 'clients');
+
+        // Remove duplicates by ID (keep first occurrence)
+        const uniqueClients = [];
+        const seenIds = new Set();
+
+        for (const client of freshData) {
+          if (!seenIds.has(client.id)) {
+            seenIds.add(client.id);
+            uniqueClients.push(client);
+          } else {
+            console.warn('[CLIENTS] ⚠️ Duplicate ID found:', client.id, client.clientName);
+          }
+        }
+
+        state.items = uniqueClients;
         state.isLoading = false;
+
+        console.log('[CLIENTS] ✅ Final state:', uniqueClients.length, 'unique clients');
       })
       .addCase(loadClients.rejected, (state, action) => {
         state.isLoading = false;
@@ -197,10 +222,15 @@ const clientsSlice = createSlice({
         state.isLoading = true;
       })
       .addCase(addClient.fulfilled, (state, action) => {
+        console.log('[CLIENTS] ➕ addClient.fulfilled - Adding client:', action.payload.id, action.payload.clientName);
+
         // Check if client already exists (prevent duplicates)
         const exists = state.items.some(item => item.id === action.payload.id);
         if (!exists) {
           state.items.unshift(action.payload);
+          console.log('[CLIENTS] ✅ Client added to state. Total:', state.items.length);
+        } else {
+          console.warn('[CLIENTS] ⚠️ Client already exists, skipping:', action.payload.id);
         }
         state.isLoading = false;
       })

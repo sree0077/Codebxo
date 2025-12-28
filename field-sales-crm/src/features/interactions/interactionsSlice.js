@@ -5,6 +5,11 @@ import {
   deleteInteraction as firebaseDeleteInteraction,
   getInteractionsByUser
 } from '../../services/firebase';
+import {
+  saveInteractions,
+  loadInteractions as loadInteractionsFromStorage,
+} from '../../services/storage';
+import { executeOrQueue, isOnline } from '../../services/syncService';
 
 const initialState = {
   items: [],
@@ -12,75 +17,132 @@ const initialState = {
   error: null,
 };
 
-// Load interactions for user from Firestore
+// Load interactions for user from Firestore or local storage
 export const loadInteractions = createAsyncThunk(
   'interactions/loadInteractions',
-  async (userId, { rejectWithValue }) => {
+  async (userId) => {
     try {
-      const result = await getInteractionsByUser(userId);
-      if (result.success) {
-        return result.interactions.map(interaction => ({
-          ...interaction,
-          createdAt: interaction.createdAt?.toDate?.()?.toISOString() || interaction.createdAt,
-        }));
+      // Try to load from Firebase if online
+      if (isOnline()) {
+        const result = await getInteractionsByUser(userId);
+        if (result.success) {
+          const interactions = result.interactions.map(interaction => ({
+            ...interaction,
+            createdAt: interaction.createdAt?.toDate?.()?.toISOString() || interaction.createdAt,
+          }));
+          // Save to local storage for offline access
+          await saveInteractions(interactions);
+          console.log('[INTERACTIONS] ✅ Loaded from Firebase and saved to local storage');
+          return interactions;
+        }
       }
-      return [];
+
+      // If offline or Firebase failed, load from local storage
+      console.log('[INTERACTIONS] 📴 Loading from local storage (offline mode)');
+      const storageResult = await loadInteractionsFromStorage();
+      return storageResult.data || [];
     } catch (error) {
-      return rejectWithValue(error.message);
+      console.error('[INTERACTIONS] ❌ Error loading interactions:', error);
+      // Fallback to local storage
+      const storageResult = await loadInteractionsFromStorage();
+      return storageResult.data || [];
     }
   }
 );
 
-// Add new interaction to Firestore
+// Add new interaction to Firestore (with offline support)
 export const addInteraction = createAsyncThunk(
   'interactions/addInteraction',
-  async ({ userId, interactionData }, { rejectWithValue }) => {
+  async ({ userId, interactionData }, { rejectWithValue, getState }) => {
     try {
-      const result = await firebaseAddInteraction({
+      const tempId = `temp_${Date.now()}`;
+      const newInteraction = {
         ...interactionData,
+        id: tempId,
         userId,
-      });
-      if (result.success) {
-        return {
+        createdAt: new Date().toISOString(),
+        _offline: !isOnline(),
+      };
+
+      if (isOnline()) {
+        const result = await firebaseAddInteraction({
           ...interactionData,
-          id: result.id,
           userId,
-          createdAt: new Date().toISOString(),
-        };
+        });
+        if (result.success) {
+          newInteraction.id = result.id;
+          newInteraction._offline = false;
+        }
+      } else {
+        // Queue for sync when online
+        await executeOrQueue('ADD_INTERACTION', { ...interactionData, userId }, () => {});
+        console.log('[INTERACTIONS] 📴 Interaction queued for sync');
       }
-      throw new Error(result.error || 'Failed to add interaction');
+
+      // Save updated interactions to local storage
+      const state = getState();
+      const updatedInteractions = [newInteraction, ...state.interactions.items];
+      await saveInteractions(updatedInteractions);
+
+      return newInteraction;
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Update interaction in Firestore
+// Update interaction in Firestore (with offline support)
 export const updateInteraction = createAsyncThunk(
   'interactions/updateInteraction',
-  async ({ userId, interactionId, interactionData }, { rejectWithValue }) => {
+  async ({ userId, interactionId, interactionData }, { rejectWithValue, getState }) => {
     try {
-      const result = await firebaseUpdateInteraction(interactionId, interactionData);
-      if (result.success) {
-        return { interactionId, interactionData };
+      if (isOnline()) {
+        const result = await firebaseUpdateInteraction(interactionId, interactionData);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to update interaction');
+        }
+      } else {
+        // Queue for sync when online
+        await executeOrQueue('UPDATE_INTERACTION', { id: interactionId, ...interactionData }, () => {});
+        console.log('[INTERACTIONS] 📴 Interaction update queued for sync');
       }
-      throw new Error(result.error || 'Failed to update interaction');
+
+      // Save updated interactions to local storage
+      const state = getState();
+      const updatedInteractions = state.interactions.items.map(i =>
+        i.id === interactionId ? { ...i, ...interactionData } : i
+      );
+      await saveInteractions(updatedInteractions);
+
+      return { interactionId, interactionData };
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Delete interaction from Firestore
+// Delete interaction from Firestore (with offline support)
 export const deleteInteraction = createAsyncThunk(
   'interactions/deleteInteraction',
-  async ({ userId, interactionId }, { rejectWithValue }) => {
+  async ({ userId, interactionId }, { rejectWithValue, getState }) => {
     try {
-      const result = await firebaseDeleteInteraction(interactionId);
-      if (result.success) {
-        return interactionId;
+      if (isOnline()) {
+        const result = await firebaseDeleteInteraction(interactionId);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to delete interaction');
+        }
+      } else {
+        // Queue for sync when online
+        await executeOrQueue('DELETE_INTERACTION', { id: interactionId }, () => {});
+        console.log('[INTERACTIONS] 📴 Interaction deletion queued for sync');
       }
-      throw new Error(result.error || 'Failed to delete interaction');
+
+      // Save updated interactions to local storage
+      const state = getState();
+      const updatedInteractions = state.interactions.items.filter(i => i.id !== interactionId);
+      await saveInteractions(updatedInteractions);
+
+      return interactionId;
     } catch (error) {
       return rejectWithValue(error.message);
     }

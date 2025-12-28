@@ -5,6 +5,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector, useDispatch } from 'react-redux';
 import { loadUser } from '../features/auth/authSlice';
 import { SCREENS } from '../utils/constants';
+import { useSync } from '../hooks/useSync';
 import {
   LoginScreen,
   ClientListScreen,
@@ -73,6 +74,9 @@ const Navigation = () => {
   const dispatch = useDispatch();
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
 
+  // Initialize sync service
+  const { isOnline, isSyncing } = useSync();
+
   // Load user on app initialization
   useEffect(() => {
     console.log('[NAVIGATION] 🧭 Navigation component mounted');
@@ -87,6 +91,12 @@ const Navigation = () => {
       isLoading,
     });
   }, [isAuthenticated, isLoading]);
+
+  // Log online/sync status
+  useEffect(() => {
+    console.log('[NAVIGATION] 🌐 Online status:', isOnline);
+    console.log('[NAVIGATION] 🔄 Syncing:', isSyncing);
+  }, [isOnline, isSyncing]);
 
   // Show loading only briefly, then default to login
   if (isLoading) {

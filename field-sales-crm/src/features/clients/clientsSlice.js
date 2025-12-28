@@ -5,6 +5,11 @@ import {
   deleteClient as firebaseDeleteClient,
   getClientsByUser
 } from '../../services/firebase';
+import {
+  saveClients,
+  loadClients as loadClientsFromStorage,
+} from '../../services/storage';
+import { executeOrQueue, isOnline } from '../../services/syncService';
 
 const initialState = {
   items: [],
@@ -14,54 +19,81 @@ const initialState = {
   searchQuery: '',
 };
 
-// Load clients for user from Firestore
+// Load clients for user from Firestore or local storage
 export const loadClients = createAsyncThunk(
   'clients/loadClients',
   async (userId, { rejectWithValue }) => {
     try {
       console.log('[CLIENTS] 📥 Loading clients for user:', userId);
-      const result = await getClientsByUser(userId);
-      if (result.success) {
-        // Convert Firestore timestamps to ISO strings
-        const clients = result.clients.map(client => ({
-          ...client,
-          createdAt: client.createdAt?.toDate?.()?.toISOString() || client.createdAt,
-          updatedAt: client.updatedAt?.toDate?.()?.toISOString() || client.updatedAt,
-        }));
-        console.log('[CLIENTS] ✅ Loaded', clients.length, 'clients');
-        return clients;
+
+      // Try to load from Firebase if online
+      if (isOnline()) {
+        const result = await getClientsByUser(userId);
+        if (result.success) {
+          // Convert Firestore timestamps to ISO strings
+          const clients = result.clients.map(client => ({
+            ...client,
+            createdAt: client.createdAt?.toDate?.()?.toISOString() || client.createdAt,
+            updatedAt: client.updatedAt?.toDate?.()?.toISOString() || client.updatedAt,
+          }));
+          // Save to local storage for offline access
+          await saveClients(clients);
+          console.log('[CLIENTS] ✅ Loaded', clients.length, 'clients from Firebase');
+          return clients;
+        }
       }
-      console.log('[CLIENTS] ⚠️ No clients found');
-      return [];
+
+      // If offline or Firebase failed, load from local storage
+      console.log('[CLIENTS] 📴 Loading from local storage (offline mode)');
+      const storageResult = await loadClientsFromStorage();
+      return storageResult.data || [];
     } catch (error) {
       console.error('[CLIENTS] ❌ Error loading clients:', error.message);
-      return rejectWithValue(error.message);
+      // Fallback to local storage
+      const storageResult = await loadClientsFromStorage();
+      return storageResult.data || [];
     }
   }
 );
 
-// Add new client to Firestore
+// Add new client to Firestore (with offline support)
 export const addClient = createAsyncThunk(
   'clients/addClient',
-  async ({ userId, clientData }, { rejectWithValue }) => {
+  async ({ userId, clientData }, { rejectWithValue, getState }) => {
     try {
       console.log('[CLIENTS] ➕ Adding new client:', clientData.clientName);
-      const result = await firebaseAddClient({
+      const tempId = `temp_${Date.now()}`;
+      const newClient = {
         ...clientData,
+        id: tempId,
         userId,
-      });
-      if (result.success) {
-        console.log('[CLIENTS] ✅ Client added successfully:', result.id);
-        return {
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        _offline: !isOnline(), // Mark as offline if created offline
+      };
+
+      if (isOnline()) {
+        const result = await firebaseAddClient({
           ...clientData,
-          id: result.id,
           userId,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
+        });
+        if (result.success) {
+          newClient.id = result.id;
+          newClient._offline = false;
+          console.log('[CLIENTS] ✅ Client added successfully:', result.id);
+        }
+      } else {
+        // Queue for sync when online
+        await executeOrQueue('ADD_CLIENT', { ...clientData, userId }, () => {});
+        console.log('[CLIENTS] 📴 Client queued for sync');
       }
-      console.error('[CLIENTS] ❌ Failed to add client:', result.error);
-      throw new Error(result.error || 'Failed to add client');
+
+      // Save updated clients to local storage
+      const state = getState();
+      const updatedClients = [newClient, ...state.clients.items];
+      await saveClients(updatedClients);
+
+      return newClient;
     } catch (error) {
       console.error('[CLIENTS] ❌ Error adding client:', error.message);
       return rejectWithValue(error.message);
@@ -69,32 +101,60 @@ export const addClient = createAsyncThunk(
   }
 );
 
-// Update client in Firestore
+// Update client in Firestore (with offline support)
 export const updateClient = createAsyncThunk(
   'clients/updateClient',
-  async ({ userId, clientId, clientData }, { rejectWithValue }) => {
+  async ({ userId, clientId, clientData }, { rejectWithValue, getState }) => {
     try {
-      const result = await firebaseUpdateClient(clientId, clientData);
-      if (result.success) {
-        return { clientId, clientData: { ...clientData, updatedAt: new Date().toISOString() } };
+      const updatedData = { ...clientData, updatedAt: new Date().toISOString() };
+
+      if (isOnline()) {
+        const result = await firebaseUpdateClient(clientId, clientData);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to update client');
+        }
+      } else {
+        // Queue for sync when online
+        await executeOrQueue('UPDATE_CLIENT', { id: clientId, ...clientData }, () => {});
+        console.log('[CLIENTS] 📴 Client update queued for sync');
       }
-      throw new Error(result.error || 'Failed to update client');
+
+      // Save updated clients to local storage
+      const state = getState();
+      const updatedClients = state.clients.items.map(c =>
+        c.id === clientId ? { ...c, ...updatedData } : c
+      );
+      await saveClients(updatedClients);
+
+      return { clientId, clientData: updatedData };
     } catch (error) {
       return rejectWithValue(error.message);
     }
   }
 );
 
-// Delete client from Firestore
+// Delete client from Firestore (with offline support)
 export const deleteClient = createAsyncThunk(
   'clients/deleteClient',
-  async ({ userId, clientId }, { rejectWithValue }) => {
+  async ({ userId, clientId }, { rejectWithValue, getState }) => {
     try {
-      const result = await firebaseDeleteClient(clientId);
-      if (result.success) {
-        return clientId;
+      if (isOnline()) {
+        const result = await firebaseDeleteClient(clientId);
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to delete client');
+        }
+      } else {
+        // Queue for sync when online
+        await executeOrQueue('DELETE_CLIENT', { id: clientId }, () => {});
+        console.log('[CLIENTS] 📴 Client deletion queued for sync');
       }
-      throw new Error(result.error || 'Failed to delete client');
+
+      // Save updated clients to local storage
+      const state = getState();
+      const updatedClients = state.clients.items.filter(c => c.id !== clientId);
+      await saveClients(updatedClients);
+
+      return clientId;
     } catch (error) {
       return rejectWithValue(error.message);
     }

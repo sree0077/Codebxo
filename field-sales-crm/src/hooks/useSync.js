@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { processSyncQueue, setupSyncListeners, isOnline as checkIsOnline } from '../services/syncService';
 import { loadClients } from '../features/clients/clientsSlice';
@@ -15,6 +15,7 @@ export const useSync = () => {
   const [isOnline, setIsOnline] = useState(checkIsOnline());
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState(null);
+  const hasInitialSynced = useRef(false); // Track if initial sync has happened
 
   // Sync data with Firebase
   const syncData = useCallback(async () => {
@@ -57,29 +58,48 @@ export const useSync = () => {
     }
   }, [dispatch, user?.id, isOnline, isSyncing]);
 
-  // Handle online event
-  const handleOnline = useCallback(() => {
-    console.log('[SYNC] 🌐 Device is online');
-    setIsOnline(true);
-    // Auto-sync when coming online
-    syncData();
-  }, [syncData]);
-
-  // Handle offline event
-  const handleOffline = useCallback(() => {
-    console.log('[SYNC] 📴 Device is offline');
-    setIsOnline(false);
-  }, []);
-
-  // Setup online/offline listeners
+  // Setup online/offline listeners (only once on mount)
   useEffect(() => {
-    setupSyncListeners(handleOnline, handleOffline);
-    
-    // Initial sync if online
-    if (isOnline && user?.id) {
+    const handleOnline = async () => {
+      console.log('[SYNC] 🌐 Device is online');
+      setIsOnline(true);
+      // Auto-sync when coming online (only if user is logged in)
+      if (user?.id && !isSyncing) {
+        await syncData();
+      }
+    };
+
+    const handleOffline = () => {
+      console.log('[SYNC] 📴 Device is offline');
+      setIsOnline(false);
+    };
+
+    // Setup listeners
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', handleOnline);
+      window.addEventListener('offline', handleOffline);
+
+      // Cleanup
+      return () => {
+        window.removeEventListener('online', handleOnline);
+        window.removeEventListener('offline', handleOffline);
+      };
+    }
+  }, []); // Empty deps - setup once, use latest values via closure
+
+  // Initial sync when user logs in (only once per user)
+  useEffect(() => {
+    if (isOnline && user?.id && !hasInitialSynced.current && !isSyncing) {
+      hasInitialSynced.current = true;
+      console.log('[SYNC] 🔄 Initial sync for user:', user.id);
       syncData();
     }
-  }, [handleOnline, handleOffline, user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Reset flag when user logs out
+    if (!user?.id) {
+      hasInitialSynced.current = false;
+    }
+  }, [user?.id]); // Only run when user ID changes, NOT when syncData changes
 
   return {
     isOnline,

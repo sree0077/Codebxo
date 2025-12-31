@@ -15,9 +15,9 @@ import { Input, Button } from '../components/common';
 import { useAuth } from '../hooks/useAuth';
 import { validateLoginForm } from '../utils/validators';
 
-// Images
-const bgImage = require('../../assets/bg.svg');
-const logoImage = require('../../assets/logo.svg');
+// Images - Using PNG for React Native compatibility
+const bgImage = require('../../assets/bg.png');
+const logoImage = require('../../assets/logo.png');
 
 const LoginScreen = () => {
   const [isLogin, setIsLogin] = useState(true);

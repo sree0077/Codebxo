@@ -38,11 +38,16 @@ class ErrorBoundary extends React.Component {
             <Text style={styles.message}>
               The app encountered an error. Please try again.
             </Text>
-            
-            {__DEV__ && this.state.error && (
+
+            {this.state.error && (
               <View style={styles.errorDetails}>
                 <Text style={styles.errorTitle}>Error Details:</Text>
                 <Text style={styles.errorText}>{this.state.error.toString()}</Text>
+                {this.state.errorInfo && (
+                  <Text style={styles.errorStack}>
+                    {this.state.errorInfo.componentStack?.substring(0, 500)}
+                  </Text>
+                )}
               </View>
             )}
 
@@ -105,6 +110,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#dc2626',
     fontFamily: 'monospace',
+  },
+  errorStack: {
+    fontSize: 10,
+    color: '#991b1b',
+    fontFamily: 'monospace',
+    marginTop: 8,
   },
   button: {
     backgroundColor: '#3b82f6',

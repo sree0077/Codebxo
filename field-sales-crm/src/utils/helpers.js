@@ -1,8 +1,9 @@
 import { Platform, Linking } from 'react-native';
+import logger from './logger';
 
 // Generate unique ID
 export const generateId = () => {
-  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+  return Date.now().toString(36) + Math.random().toString(36).substring(2);
 };
 
 // Format date to readable string
@@ -43,11 +44,11 @@ export const makePhoneCall = async (phoneNumber) => {
       await Linking.openURL(url);
       return true;
     } else {
-      console.log("Phone calls not supported on this device");
+      logger.warn("Phone calls not supported on this device");
       return false;
     }
   } catch (error) {
-    console.error('Error making phone call:', error);
+    logger.error('Error making phone call:', error);
     return false;
   }
 };
@@ -63,11 +64,11 @@ export const sendSMS = async (phoneNumber, message = '') => {
       await Linking.openURL(url);
       return true;
     } else {
-      console.log("SMS not supported on this device");
+      logger.warn("SMS not supported on this device");
       return false;
     }
   } catch (error) {
-    console.error('Error sending SMS:', error);
+    logger.error('Error sending SMS:', error);
     return false;
   }
 };
@@ -107,6 +108,34 @@ export const getInteractionIcon = (type) => {
       return '🤝';
     default:
       return '📝';
+  }
+};
+
+// Get business type icon
+export const getBusinessTypeIcon = (businessType) => {
+  switch (businessType) {
+    case 'retail':
+      return '🏪'; // Store/Shop
+    case 'wholesale':
+      return '📦'; // Package/Warehouse
+    case 'manufacturing':
+      return '🏭'; // Factory
+    case 'services':
+      return '🛠️'; // Tools/Services
+    case 'technology':
+      return '💻'; // Computer/Tech
+    case 'healthcare':
+      return '🏥'; // Hospital/Healthcare
+    case 'education':
+      return '🎓'; // Graduation Cap/Education
+    case 'real_estate':
+      return '🏢'; // Building/Real Estate
+    case 'finance':
+      return '💰'; // Money Bag/Finance
+    case 'other':
+      return '🏪'; // Generic Business
+    default:
+      return '🏢'; // Default Business Building
   }
 };
 

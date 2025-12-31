@@ -1,7 +1,57 @@
 import React, { useState } from 'react';
 import { Platform, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { Marker } from './MapView';
 import { makePhoneCall, sendSMS, getPotentialColor } from '../../utils/helpers';
+
+/**
+ * Generate a custom marker icon as SVG data URL
+ * Creates a pin-shaped marker with shadow effect
+ */
+const createMarkerIcon = (color, hasLabel = false) => {
+  const svg = `
+    <svg width="48" height="58" viewBox="0 0 48 58" xmlns="http://www.w3.org/2000/svg">
+      <!-- Shadow -->
+      <ellipse cx="24" cy="54" rx="12" ry="4" fill="rgba(0,0,0,0.2)"/>
+
+      <!-- Pin shape -->
+      <path d="M24 2C14.6 2 7 9.6 7 19c0 11 17 35 17 35s17-24 17-35c0-9.4-7.6-17-17-17z"
+            fill="${color}"
+            stroke="#ffffff"
+            stroke-width="2.5"/>
+
+      <!-- Inner circle -->
+      <circle cx="24" cy="19" r="7" fill="rgba(255,255,255,0.3)"/>
+      <circle cx="24" cy="19" r="5" fill="rgba(255,255,255,0.5)"/>
+    </svg>
+  `;
+
+  return {
+    url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+    scaledSize: window.google?.maps ? new window.google.maps.Size(48, 58) : { width: 48, height: 58 },
+    anchor: window.google?.maps ? new window.google.maps.Point(24, 58) : { x: 24, y: 58 },
+    labelOrigin: window.google?.maps ? new window.google.maps.Point(24, 19) : { x: 24, y: 19 },
+  };
+};
+
+// Import platform-specific marker components
+let Marker, MarkerWeb, InfoWindow, AdvancedMarkerElement;
+if (Platform.OS === 'web') {
+  try {
+    const googleMaps = require('@react-google-maps/api');
+    MarkerWeb = googleMaps.Marker;
+    InfoWindow = googleMaps.InfoWindow;
+    // Note: AdvancedMarkerElement not yet available in @react-google-maps/api
+    // Using standard Marker for now (still supported, just deprecated)
+  } catch (e) {
+    console.warn('Google Maps API not available for web');
+  }
+} else {
+  try {
+    const maps = require('react-native-maps');
+    Marker = maps.Marker;
+  } catch (e) {
+    console.warn('react-native-maps not available');
+  }
+}
 
 /**
  * Custom marker component for displaying client locations
@@ -45,60 +95,90 @@ const ClientMarker = ({ client, onPress, isSelected = false, index }) => {
 
   if (Platform.OS === 'web') {
     // Web: Use Google Maps Marker with InfoWindow
+    if (!MarkerWeb || !InfoWindow) return null;
+
+    // Get marker color based on selection and potential
+    const color = isSelected ? '#3b82f6' : markerColor;
+
+    // Use custom SVG marker icon with shadow
+    const markerIcon = createMarkerIcon(color, index !== undefined);
+
+    // Add label if marker has an index (in route planning mode)
+    const markerLabel = index !== undefined ? {
+      text: String(index + 1),
+      color: '#ffffff',
+      fontSize: '14px',
+      fontWeight: 'bold',
+    } : undefined;
+
     return (
-      <div
-        style={{
-          position: 'absolute',
-          transform: 'translate(-50%, -100%)',
-        }}
+      <MarkerWeb
+        position={{ lat: coordinate.latitude, lng: coordinate.longitude }}
+        onClick={handleMarkerPress}
+        icon={markerIcon}
+        label={markerLabel}
+        zIndex={isSelected ? 1000 : index !== undefined ? 100 : 1}
+        animation={isSelected && window.google?.maps ? window.google.maps.Animation.BOUNCE : null}
       >
-        <div
-          onClick={handleMarkerPress}
-          style={{
-            width: 30,
-            height: 30,
-            borderRadius: '50%',
-            backgroundColor: isSelected ? '#3b82f6' : markerColor,
-            border: '3px solid white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: 12,
-            fontWeight: 'bold',
-            color: 'white',
-          }}
-        >
-          {index !== undefined ? index + 1 : '📍'}
-        </div>
-        
         {showCallout && (
-          <div style={webStyles.callout}>
-            <div style={webStyles.calloutContent}>
-              <h3 style={webStyles.clientName}>{client.clientName}</h3>
+          <InfoWindow onCloseClick={() => setShowCallout(false)}>
+            <div style={{ minWidth: '200px', padding: '8px' }}>
+              <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 'bold' }}>
+                {client.clientName}
+              </h3>
               {client.companyName && (
-                <p style={webStyles.companyName}>{client.companyName}</p>
+                <p style={{ margin: '4px 0', fontSize: '14px', color: '#64748b' }}>
+                  {client.companyName}
+                </p>
               )}
               {client.phoneNumber && (
-                <p style={webStyles.phone}>📞 {client.phoneNumber}</p>
+                <p style={{ margin: '4px 0', fontSize: '13px' }}>
+                  📞 {client.phoneNumber}
+                </p>
               )}
               {client.address && (
-                <p style={webStyles.address}>📍 {client.address}</p>
+                <p style={{ margin: '4px 0', fontSize: '12px', color: '#64748b' }}>
+                  📍 {client.address}
+                </p>
               )}
-              
-              <div style={webStyles.actions}>
-                <button onClick={handleCall} style={webStyles.actionButton}>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+                <button
+                  onClick={handleCall}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                  }}
+                >
                   📞 Call
                 </button>
-                <button onClick={handleMessage} style={webStyles.actionButton}>
+                <button
+                  onClick={handleMessage}
+                  style={{
+                    flex: 1,
+                    backgroundColor: '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    fontWeight: '600',
+                  }}
+                >
                   💬 Message
                 </button>
               </div>
             </div>
-          </div>
+          </InfoWindow>
         )}
-      </div>
+      </MarkerWeb>
     );
   }
 

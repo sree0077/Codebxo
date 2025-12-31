@@ -7,22 +7,15 @@ import store from './src/store/store';
 import Navigation from './src/store/navigation';
 import { ErrorBoundary } from './src/components/common';
 
-console.log('[APP] 🚀 Starting Field Sales CRM...');
-console.log('[APP] 📱 Platform:', Platform.OS);
-console.log('[APP] 📦 Platform Version:', Platform.Version);
-
 // Wrapper component - use GestureHandlerRootView only on native
 const RootWrapper = ({ children }) => {
   if (Platform.OS === 'web') {
-    console.log('[APP] 🌐 Running on Web');
     return <View style={{ flex: 1 }}>{children}</View>;
   }
-  console.log('[APP] 📱 Running on Native (Android/iOS)');
   return <GestureHandlerRootView style={{ flex: 1 }}>{children}</GestureHandlerRootView>;
 };
 
 export default function App() {
-  console.log('[APP] ✅ App component mounted');
   return (
     <ErrorBoundary>
       <RootWrapper>

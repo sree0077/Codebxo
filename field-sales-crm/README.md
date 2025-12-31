@@ -28,10 +28,11 @@ A comprehensive CRM (Customer Relationship Management) application for field sal
 - ✅ **Client Search**: Real-time search functionality
 - ✅ **Follow-up Reminders**: Track upcoming follow-ups
 - ✅ **Data Persistence**: All data cached locally for offline access
-- ✅ **Google Maps Integration**: Interactive map view with client locations
-- ✅ **Route Planning**: Optimized route calculation for multiple clients
+- ✅ **OpenStreetMap Integration**: FREE interactive map view with client locations
+- ✅ **Route Planning**: Optimized route calculation for multiple clients (FREE!)
 - ✅ **Turn-by-Turn Directions**: Navigate between client locations
 - ✅ **Distance & Time Estimates**: Calculate travel distance and duration
+- ✅ **No Billing Required**: 100% free maps with OpenRouteService (40k requests/month)
 
 ## 🏗️ Architecture
 
@@ -65,7 +66,7 @@ src/
 | Styling | NativeWind (Tailwind CSS) |
 | Storage | AsyncStorage |
 | Location | expo-location |
-| Maps | Google Maps API + react-native-maps |
+| Maps | OpenStreetMap + OpenRouteService (FREE!) |
 | Backend | Firebase (Optional) |
 
 ## 🚀 Getting Started
@@ -90,7 +91,21 @@ cd Codebxo/field-sales-crm
 npm install
 ```
 
-3. **Configure Firebase:**
+3. **Set up environment variables:**
+
+   Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+
+   Fill in your API keys and credentials in `.env`:
+   - Google Maps API key
+   - Firebase configuration
+   - OpenRouteService API key (optional)
+
+   📖 **Detailed setup guide:** See [ENV_SETUP_GUIDE.md](./ENV_SETUP_GUIDE.md)
+
+4. **Configure Firebase:**
 
    Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
 
@@ -98,19 +113,9 @@ npm install
    - **Authentication** → Email/Password provider
    - **Firestore Database** → Create database in test mode
 
-   Update `src/services/firebase.js` with your Firebase config:
-   ```javascript
-   const firebaseConfig = {
-     apiKey: "YOUR_API_KEY",
-     authDomain: "YOUR_AUTH_DOMAIN",
-     projectId: "YOUR_PROJECT_ID",
-     storageBucket: "YOUR_STORAGE_BUCKET",
-     messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-     appId: "YOUR_APP_ID"
-   };
-   ```
+   Copy your Firebase configuration to `.env` file (see step 3)
 
-4. **Start the development server:**
+5. **Start the development server:**
 ```bash
 # Start Expo development server
 npm start
@@ -119,7 +124,7 @@ npm start
 npm run web
 ```
 
-5. **Access the application:**
+6. **Access the application:**
    - **Web**: Open http://localhost:8081 in your browser
    - **Mobile**: Scan the QR code with Expo Go app
    - **Android Emulator**: Press `a` in the terminal
@@ -143,24 +148,30 @@ npm run web
    - Click "Add Client"
    - You'll be automatically redirected to the client list
 
-### Google Maps Setup (Optional but Recommended)
+### OpenStreetMap Setup (FREE - Recommended!)
 
-To enable the Maps feature with route planning:
+To enable the Maps feature with route planning (100% FREE, no credit card):
 
-1. **Get Google Maps API Keys:**
-   - Follow the detailed guide in [GOOGLE_MAPS_SETUP.md](GOOGLE_MAPS_SETUP.md)
-   - You'll need API keys for Web, Android, and iOS
+1. **Get FREE OpenRouteService API Key:**
+   - Follow the detailed guide in [OPENSTREETMAP_SETUP.md](OPENSTREETMAP_SETUP.md)
+   - Sign up at [OpenRouteService](https://openrouteservice.org/dev/#/signup)
+   - No credit card required!
+   - 40,000 requests/month FREE tier
 
-2. **Configure API Keys:**
+2. **Configure API Key:**
    ```bash
    # Copy the example env file
    cp .env.example .env
 
-   # Edit .env and add your API keys
-   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_WEB=your_web_key
-   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_ANDROID=your_android_key
-   EXPO_PUBLIC_GOOGLE_MAPS_API_KEY_IOS=your_ios_key
+   # Edit .env and add your API key
+   EXPO_PUBLIC_OPENROUTE_API_KEY=your_api_key_here
    ```
+
+3. **That's it!** Maps will work immediately with:
+   - Interactive OpenStreetMap tiles
+   - Route planning and optimization
+   - Distance and time calculations
+   - Turn-by-turn directions
 
 3. **Using the Maps Feature:**
    - See [MAPS_FEATURE_GUIDE.md](MAPS_FEATURE_GUIDE.md) for detailed usage instructions

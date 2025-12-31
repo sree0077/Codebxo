@@ -11,11 +11,11 @@ const InteractionCard = ({ interaction, onPress, onDelete }) => {
       case 'call':
         return '#22c55e';
       case 'message':
-        return '#3b82f6';
+        return '#7f68ea';
       case 'meeting':
-        return '#8b5cf6';
+        return '#9b87f0';
       default:
-        return '#64748b';
+        return '#7c85a0';
     }
   };
 

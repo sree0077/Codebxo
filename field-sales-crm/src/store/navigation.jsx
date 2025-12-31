@@ -29,7 +29,7 @@ const AuthStack = () => (
 const MainStack = () => (
   <Stack.Navigator
     screenOptions={{
-      headerStyle: { backgroundColor: '#3b82f6' },
+      headerStyle: { backgroundColor: '#7f68ea' },
       headerTintColor: '#ffffff',
       headerTitleStyle: { fontWeight: 'bold' },
       headerBackTitleVisible: false,
@@ -71,7 +71,7 @@ const MainStack = () => (
 // Simple loading component
 const LoadingScreen = () => (
   <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color="#3b82f6" />
+    <ActivityIndicator size="large" color="#7f68ea" />
     <Text style={styles.loadingText}>Loading...</Text>
   </View>
 );
@@ -85,32 +85,13 @@ const Navigation = () => {
 
   // Load user on app initialization
   useEffect(() => {
-    console.log('[NAVIGATION] 🧭 Navigation component mounted');
-    console.log('[NAVIGATION] 📡 Dispatching loadUser...');
     dispatch(loadUser());
   }, [dispatch]);
 
-  // Log auth state changes
-  useEffect(() => {
-    console.log('[NAVIGATION] 🔐 Auth state changed:', {
-      isAuthenticated,
-      isLoading,
-    });
-  }, [isAuthenticated, isLoading]);
-
-  // Log online/sync status
-  useEffect(() => {
-    console.log('[NAVIGATION] 🌐 Online status:', isOnline);
-    console.log('[NAVIGATION] 🔄 Syncing:', isSyncing);
-  }, [isOnline, isSyncing]);
-
   // Show loading only briefly, then default to login
   if (isLoading) {
-    console.log('[NAVIGATION] ⏳ Showing loading screen...');
     return <LoadingScreen />;
   }
-
-  console.log('[NAVIGATION] ✅ Rendering', isAuthenticated ? 'MainStack' : 'AuthStack');
 
   return (
     <View style={styles.container}>

@@ -61,10 +61,18 @@ export const useRouteOptimization = () => {
         const optimizedRoute = {
           clients: optimizedOrder,
           polyline: routeResult.route.polyline,
+          coordinates: routeResult.route.coordinates,
           totalDistance: routeResult.route.distance,
           totalDuration: routeResult.route.duration,
           legs: routeResult.route.legs,
         };
+
+        console.log('[ROUTE] Optimized route created:', {
+          clientCount: optimizedRoute.clients.length,
+          hasPolyline: !!optimizedRoute.polyline,
+          hasCoordinates: !!optimizedRoute.coordinates,
+          coordinateCount: optimizedRoute.coordinates?.length
+        });
 
         setRoute(optimizedRoute);
         setIsCalculating(false);
@@ -113,10 +121,18 @@ export const useRouteOptimization = () => {
         const simpleRoute = {
           clients: validClients,
           polyline: routeResult.route.polyline,
+          coordinates: routeResult.route.coordinates,
           totalDistance: routeResult.route.distance,
           totalDuration: routeResult.route.duration,
           legs: routeResult.route.legs,
         };
+
+        console.log('[ROUTE] Simple route created:', {
+          clientCount: simpleRoute.clients.length,
+          hasPolyline: !!simpleRoute.polyline,
+          hasCoordinates: !!simpleRoute.coordinates,
+          coordinateCount: simpleRoute.coordinates?.length
+        });
 
         setRoute(simpleRoute);
         setIsCalculating(false);

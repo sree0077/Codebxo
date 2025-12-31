@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Alert, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Alert, StyleSheet, TouchableOpacity } from 'react-native';
 import { Input, Button, Dropdown } from '../common';
 import { BUSINESS_TYPES, CUSTOMER_POTENTIAL, USING_SYSTEM_OPTIONS } from '../../utils/constants';
 import { validateClientForm } from '../../utils/validators';
@@ -20,6 +20,10 @@ const ClientForm = ({ initialData = {}, onSubmit, isLoading = false, submitLabel
   const [errors, setErrors] = useState({});
   const { location, address, isLoading: locationLoading, getCurrentLocation } = useLocation();
 
+  // Temporary state for coordinate inputs to allow free typing
+  const [latitudeInput, setLatitudeInput] = useState('');
+  const [longitudeInput, setLongitudeInput] = useState('');
+
   // Update form when location is captured
   useEffect(() => {
     if (location) {
@@ -28,8 +32,19 @@ const ClientForm = ({ initialData = {}, onSubmit, isLoading = false, submitLabel
         location,
         address: address || prev.address,
       }));
+      // Update input fields when GPS is captured
+      setLatitudeInput(location.latitude?.toString() || '');
+      setLongitudeInput(location.longitude?.toString() || '');
     }
   }, [location, address]);
+
+  // Initialize input fields when editing existing client
+  useEffect(() => {
+    if (initialData?.location) {
+      setLatitudeInput(initialData.location.latitude?.toString() || '');
+      setLongitudeInput(initialData.location.longitude?.toString() || '');
+    }
+  }, [initialData]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -114,12 +129,92 @@ const ClientForm = ({ initialData = {}, onSubmit, isLoading = false, submitLabel
             variant="outline"
             loading={locationLoading}
           />
-          {formData.location && (
+
+          {/* Manual Coordinate Entry */}
+          <View style={styles.manualEntrySection}>
+            <Text style={styles.manualEntryLabel}>Or enter coordinates manually:</Text>
+            <View style={styles.coordinateInputs}>
+              <Input
+                label="Latitude"
+                value={latitudeInput}
+                onChangeText={(value) => {
+                  // Update the input field immediately
+                  setLatitudeInput(value);
+
+                  // Allow empty input
+                  if (value === '') {
+                    setFormData(prev => ({
+                      ...prev,
+                      location: { ...prev.location, latitude: null, longitude: prev.location?.longitude || null }
+                    }));
+                    return;
+                  }
+
+                  // Try to parse the value
+                  const lat = parseFloat(value);
+
+                  // Update formData only if it's a valid number in range
+                  if (!isNaN(lat) && lat >= -90 && lat <= 90) {
+                    setFormData(prev => ({
+                      ...prev,
+                      location: { ...prev.location, latitude: lat, longitude: prev.location?.longitude || null }
+                    }));
+                  }
+                }}
+                placeholder="e.g., 12.9716"
+                keyboardType="decimal-pad"
+                containerStyle={styles.coordinateInput}
+              />
+              <Input
+                label="Longitude"
+                value={longitudeInput}
+                onChangeText={(value) => {
+                  // Update the input field immediately
+                  setLongitudeInput(value);
+
+                  // Allow empty input
+                  if (value === '') {
+                    setFormData(prev => ({
+                      ...prev,
+                      location: { latitude: prev.location?.latitude || null, ...prev.location, longitude: null }
+                    }));
+                    return;
+                  }
+
+                  // Try to parse the value
+                  const lng = parseFloat(value);
+
+                  // Update formData only if it's a valid number in range
+                  if (!isNaN(lng) && lng >= -180 && lng <= 180) {
+                    setFormData(prev => ({
+                      ...prev,
+                      location: { latitude: prev.location?.latitude || null, ...prev.location, longitude: lng }
+                    }));
+                  }
+                }}
+                placeholder="e.g., 77.5946"
+                keyboardType="decimal-pad"
+                containerStyle={styles.coordinateInput}
+              />
+            </View>
+          </View>
+
+          {formData.location && formData.location.latitude && formData.location.longitude && (
             <View style={styles.locationInfo}>
               <Text style={styles.locationText}>
                 📍 Lat: {formData.location.latitude.toFixed(6)},
                 Long: {formData.location.longitude.toFixed(6)}
               </Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setFormData(prev => ({ ...prev, location: null }));
+                  setLatitudeInput('');
+                  setLongitudeInput('');
+                }}
+                style={styles.clearLocationButton}
+              >
+                <Text style={styles.clearLocationText}>✕ Clear</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
@@ -162,10 +257,41 @@ const styles = StyleSheet.create({
     padding: 12,
     backgroundColor: '#f0fdf4',
     borderRadius: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   locationText: {
     color: '#15803d',
     fontSize: 14,
+    flex: 1,
+  },
+  clearLocationButton: {
+    padding: 4,
+  },
+  clearLocationText: {
+    color: '#dc2626',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  manualEntrySection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+  },
+  manualEntryLabel: {
+    fontSize: 14,
+    color: '#6b7280',
+    marginBottom: 12,
+    fontWeight: '500',
+  },
+  coordinateInputs: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  coordinateInput: {
+    flex: 1,
   },
   submitSection: {
     marginTop: 16,

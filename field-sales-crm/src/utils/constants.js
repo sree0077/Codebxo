@@ -46,24 +46,25 @@ export const STORAGE_KEYS = {
 
 // Colors
 export const COLORS = {
-  primary: '#3b82f6',
-  primaryDark: '#1d4ed8',
-  secondary: '#64748b',
+  primary: '#7f68ea',        // Purple - main brand color
+  primaryDark: '#6952d1',    // Darker purple for hover/active states
+  primaryLight: '#9b87f0',   // Lighter purple for backgrounds
+  secondary: '#eceff8',      // Light gray - secondary color
   success: '#22c55e',
   warning: '#f59e0b',
   error: '#ef4444',
-  background: '#f8fafc',
+  background: '#eceff8',     // Light gray background
   white: '#ffffff',
   black: '#000000',
   gray: {
-    100: '#f1f5f9',
-    200: '#e2e8f0',
-    300: '#cbd5e1',
-    400: '#94a3b8',
-    500: '#64748b',
-    600: '#475569',
-    700: '#334155',
-    800: '#1e293b',
+    100: '#f8f9fc',
+    200: '#eceff8',          // Secondary color
+    300: '#d4d9e8',
+    400: '#a8b0c8',
+    500: '#7c85a0',
+    600: '#5a6278',
+    700: '#3f4555',
+    800: '#2a2e3a',
   },
 };
 

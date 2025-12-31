@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import {
   addClient as firebaseAddClient,
   updateClient as firebaseUpdateClient,
@@ -23,10 +24,12 @@ import {
  * Check if device is online
  */
 export const isOnline = () => {
-  if (typeof navigator !== 'undefined' && navigator.onLine !== undefined) {
+  // For web platform, use navigator.onLine
+  if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.onLine !== undefined) {
     return navigator.onLine;
   }
-  // Assume online if we can't detect
+  // For mobile platforms (iOS/Android), assume online by default
+  // Network state will be managed by the app's network listeners
   return true;
 };
 
@@ -140,7 +143,8 @@ export const executeOrQueue = async (type, data, executeFunction) => {
  * Setup online/offline event listeners
  */
 export const setupSyncListeners = (onOnline, onOffline) => {
-  if (typeof window !== 'undefined') {
+  // Only setup listeners for web platform
+  if (Platform.OS === 'web' && typeof window !== 'undefined' && window.addEventListener) {
     window.addEventListener('online', () => {
       console.log('[SYNC] 🌐 Device is online');
       if (onOnline) onOnline();
@@ -150,6 +154,10 @@ export const setupSyncListeners = (onOnline, onOffline) => {
       console.log('[SYNC] 📴 Device is offline');
       if (onOffline) onOffline();
     });
+  } else {
+    // For mobile platforms, we don't set up listeners
+    // The app will assume it's always online and handle network errors gracefully
+    console.log('[SYNC] 📱 Mobile platform detected - network listeners not required');
   }
 };
 

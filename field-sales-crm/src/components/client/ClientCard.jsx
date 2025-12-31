@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import Card from '../common/Card';
-import { getInitials, getPotentialColor, makePhoneCall, sendSMS } from '../../utils/helpers';
+import { getInitials, getPotentialColor, makePhoneCall, sendSMS, getBusinessTypeIcon } from '../../utils/helpers';
 import { BUSINESS_TYPES } from '../../utils/constants';
 
 const ClientCard = ({ client, onPress, onCall, onMessage }) => {
   const businessType = BUSINESS_TYPES.find((b) => b.value === client.businessType);
   const potentialColor = getPotentialColor(client.customerPotential);
+  const businessIcon = getBusinessTypeIcon(client.businessType);
 
   const handleCall = () => {
     if (client.phoneNumber) {
@@ -45,7 +46,7 @@ const ClientCard = ({ client, onPress, onCall, onMessage }) => {
             </Text>
           )}
           <View style={styles.metaRow}>
-            <Text style={styles.businessType}>📍 {businessType?.label || 'N/A'}</Text>
+            <Text style={styles.businessType}>{businessIcon} {businessType?.label || 'N/A'}</Text>
             {client.customerPotential && (
               <View
                 style={[styles.potentialBadge, { backgroundColor: potentialColor + '20' }]}
@@ -114,10 +115,10 @@ const styles = StyleSheet.create({
   clientName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#2a2e3a',
   },
   companyName: {
-    color: '#6b7280',
+    color: '#7c85a0',
     fontSize: 14,
   },
   metaRow: {
@@ -126,7 +127,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   businessType: {
-    color: '#9ca3af',
+    color: '#a8b0c8',
     fontSize: 12,
   },
   potentialBadge: {
@@ -156,7 +157,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#e8e3fc',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -167,16 +168,16 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
+    borderTopColor: '#eceff8',
     flexDirection: 'row',
     alignItems: 'center',
   },
   phoneText: {
-    color: '#9ca3af',
+    color: '#a8b0c8',
     fontSize: 14,
   },
   locationText: {
-    color: '#9ca3af',
+    color: '#a8b0c8',
     fontSize: 14,
     marginLeft: 16,
   },

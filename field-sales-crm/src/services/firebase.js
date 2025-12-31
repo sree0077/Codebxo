@@ -1,6 +1,9 @@
+import { Platform } from 'react-native';
 import { initializeApp } from 'firebase/app';
 import {
   getAuth,
+  initializeAuth,
+  getReactNativePersistence,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
@@ -11,7 +14,6 @@ import {
   collection,
   doc,
   setDoc,
-  getDoc,
   getDocs,
   updateDoc,
   deleteDoc,
@@ -20,25 +22,64 @@ import {
   orderBy,
   serverTimestamp
 } from 'firebase/firestore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Firebase configuration
+// Firebase configuration from environment variables
 const firebaseConfig = {
-  apiKey: "AIzaSyAuxdtq-HGz7YxRREiPLphONLv65DrE9co",
-  authDomain: "codebxo-66cab.firebaseapp.com",
-  projectId: "codebxo-66cab",
-  storageBucket: "codebxo-66cab.firebasestorage.app",
-  messagingSenderId: "981206511276",
-  appId: "1:981206511276:web:aca4c5e60fea466e777909",
-  measurementId: "G-QFDS8GH1FH"
+  apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.EXPO_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
+
+// Validate Firebase configuration
+const validateFirebaseConfig = () => {
+  const requiredKeys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+  const missingKeys = requiredKeys.filter(key => !firebaseConfig[key]);
+
+  if (missingKeys.length > 0) {
+    console.error('[FIREBASE] ❌ Missing required environment variables:');
+    missingKeys.forEach(key => {
+      console.error(`  - EXPO_PUBLIC_FIREBASE_${key.replace(/([A-Z])/g, '_$1').toUpperCase()}`);
+    });
+    console.error('[FIREBASE] Please check your .env file and ensure all Firebase variables are set.');
+    throw new Error('Firebase configuration incomplete. Check .env file.');
+  }
+};
+
+// Validate configuration before initializing
+validateFirebaseConfig();
 
 // Initialize Firebase
 console.log('[FIREBASE] 🔥 Initializing Firebase...');
 const app = initializeApp(firebaseConfig);
 
-// Initialize Auth - use getAuth for both web and mobile
-// Firebase handles persistence automatically
-const auth = getAuth(app);
+// Initialize Auth with proper persistence for React Native
+let auth;
+try {
+  if (Platform.OS === 'web') {
+    // For web, use default getAuth
+    auth = getAuth(app);
+  } else {
+    // For mobile (iOS/Android), use initializeAuth with AsyncStorage persistence
+    // Try to get existing auth instance first
+    try {
+      auth = getAuth(app);
+    } catch (e) {
+      // If no auth instance exists, initialize with AsyncStorage
+      auth = initializeAuth(app, {
+        persistence: getReactNativePersistence(AsyncStorage)
+      });
+    }
+  }
+} catch (error) {
+  // If auth is already initialized, just get the existing instance
+  console.log('[FIREBASE] ℹ️ Auth already initialized, using existing instance');
+  auth = getAuth(app);
+}
 
 // Initialize Firestore
 const db = getFirestore(app);

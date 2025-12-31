@@ -1,9 +1,23 @@
-import React, { useState } from 'react';
-import { View, Text, KeyboardAvoidingView, Platform, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
+import { useState } from 'react';
+import {
+  View,
+  Text,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  TouchableOpacity,
+  StyleSheet,
+  ImageBackground,
+  Image
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input, Button } from '../components/common';
 import { useAuth } from '../hooks/useAuth';
 import { validateLoginForm } from '../utils/validators';
+
+// Images
+const bgImage = require('../../assets/bg.svg');
+const logoImage = require('../../assets/logo.svg');
 
 const LoginScreen = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -14,23 +28,14 @@ const LoginScreen = () => {
 
   const { login, register, isLoading, error, dismissError } = useAuth();
 
-  // Log component mount
-  React.useEffect(() => {
-    console.log('[LOGIN] 🔐 LoginScreen mounted');
-  }, []);
-
   const handleSubmit = async () => {
-    console.log('[LOGIN] 📝 Form submitted:', { isLogin, email });
-
     const validation = validateLoginForm(email, password);
     if (!validation.isValid) {
-      console.log('[LOGIN] ❌ Validation failed:', validation.errors);
       setErrors(validation.errors);
       return;
     }
 
     if (!isLogin && password !== confirmPassword) {
-      console.log('[LOGIN] ❌ Passwords do not match');
       setErrors({ confirmPassword: 'Passwords do not match' });
       return;
     }
@@ -38,124 +43,141 @@ const LoginScreen = () => {
     setErrors({});
 
     if (isLogin) {
-      console.log('[LOGIN] 🔐 Attempting login...');
       await login(email, password);
     } else {
-      console.log('[LOGIN] 📝 Attempting registration...');
       await register(email, password);
     }
   };
 
   const toggleMode = () => {
-    console.log('[LOGIN] 🔄 Toggling mode to:', !isLogin ? 'Login' : 'Register');
     setIsLogin(!isLogin);
     setErrors({});
     dismissError();
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.flex}
-      >
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
+    <ImageBackground
+      source={bgImage}
+      style={styles.background}
+      resizeMode="cover"
+    >
+      <SafeAreaView style={styles.container}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.flex}
         >
-          <View style={styles.content}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.icon}>📊</Text>
-              <Text style={styles.title}>Field Sales CRM</Text>
-              <Text style={styles.subtitle}>
-                {isLogin ? 'Welcome back! Please login to continue.' : 'Create an account to get started.'}
-              </Text>
-            </View>
-
-            {/* Error Message */}
-            {error && (
-              <View style={styles.errorBox}>
-                <Text style={styles.errorText}>{error}</Text>
-              </View>
-            )}
-
-            {/* Form */}
-            <View style={styles.form}>
-              <Input
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                error={errors.email}
-              />
-
-              <Input
-                label="Password"
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter your password"
-                secureTextEntry={true}
-                error={errors.password}
-              />
-
-              {!isLogin && (
-                <Input
-                  label="Confirm Password"
-                  value={confirmPassword}
-                  onChangeText={setConfirmPassword}
-                  placeholder="Confirm your password"
-                  secureTextEntry={true}
-                  error={errors.confirmPassword}
-                />
-              )}
-            </View>
-
-            {/* Submit Button */}
-            <Button
-              title={isLogin ? 'Login' : 'Create Account'}
-              onPress={handleSubmit}
-              loading={isLoading}
-            />
-
-            {/* Toggle Mode */}
-            <View style={styles.toggleContainer}>
-              <Text style={styles.toggleText}>
-                {isLogin ? "Don't have an account? " : 'Already have an account? '}
-              </Text>
-              <TouchableOpacity onPress={toggleMode}>
-                <Text style={styles.toggleLink}>
-                  {isLogin ? 'Sign Up' : 'Login'}
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.content}>
+              {/* Header */}
+              <View style={styles.header}>
+                <View style={styles.iconContainer}>
+                  <Image
+                    source={logoImage}
+                    style={styles.logo}
+                    resizeMode="contain"
+                  />
+                </View>
+                <Text style={styles.title}>Field Sales CRM</Text>
+                <Text style={styles.subtitle}>
+                  {isLogin ? 'Welcome back! Please login to continue.' : 'Create an account to get started.'}
                 </Text>
-              </TouchableOpacity>
-            </View>
+              </View>
 
-            {/* Demo Credentials */}
-            <View style={styles.demoBox}>
-              <Text style={styles.demoText}>
-                💡 Demo: Use any email and password (6+ chars)
-              </Text>
+              {/* Card Container - Transparent */}
+              <View style={styles.card}>
+                {/* Error Message */}
+                {error && (
+                  <View style={styles.errorBox}>
+                    <Text style={styles.errorIcon}>⚠️</Text>
+                    <Text style={styles.errorText}>{error}</Text>
+                  </View>
+                )}
+
+                {/* Form */}
+                <View style={styles.form}>
+                  <Input
+                    label="Email"
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="Enter your email"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    error={errors.email}
+                  />
+
+                  <Input
+                    label="Password"
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Enter your password"
+                    secureTextEntry={true}
+                    error={errors.password}
+                  />
+
+                  {!isLogin && (
+                    <Input
+                      label="Confirm Password"
+                      value={confirmPassword}
+                      onChangeText={setConfirmPassword}
+                      placeholder="Confirm your password"
+                      secureTextEntry={true}
+                      error={errors.confirmPassword}
+                    />
+                  )}
+                </View>
+
+                {/* Submit Button */}
+                <Button
+                  title={isLogin ? 'Login' : 'Create Account'}
+                  onPress={handleSubmit}
+                  loading={isLoading}
+                />
+
+                {/* Toggle Mode */}
+                <View style={styles.toggleContainer}>
+                  <Text style={styles.toggleText}>
+                    {isLogin ? "Don't have an account? " : 'Already have an account? '}
+                  </Text>
+                  <TouchableOpacity onPress={toggleMode}>
+                    <Text style={styles.toggleLink}>
+                      {isLogin ? 'Sign Up' : 'Login'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
+              {/* Demo Credentials */}
+              <View style={styles.demoBox}>
+                <Text style={styles.demoIcon}>💡</Text>
+                <Text style={styles.demoText}>
+                   Use email and password (6+ chars)
+                </Text>
+              </View>
             </View>
-          </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 };
 
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+  },
   container: {
     flex: 1,
-    backgroundColor: '#ffffff',
   },
   flex: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
+    paddingVertical: 20,
   },
   content: {
     flex: 1,
@@ -164,21 +186,71 @@ const styles = StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: 40,
+    marginBottom: 32,
   },
-  icon: {
-    fontSize: 48,
+  iconContainer: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 16,
+    overflow: 'hidden',
+    ...Platform.select({
+      web: {
+        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    resizeMode: 'cover',
   },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#7f68ea',
+    marginBottom: 8,
+    textAlign: 'center',
   },
   subtitle: {
-    color: '#6b7280',
+    color: '#5a6278',
     marginTop: 8,
     textAlign: 'center',
+    fontSize: 15,
+  },
+  card: {
+    backgroundColor: 'rgba(255, 255, 255, 0.85)',
+    borderRadius: 16,
+    padding: 24,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+    ...Platform.select({
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 12,
+      },
+      android: {
+        elevation: 6,
+      },
+      web: {
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.12)',
+        backdropFilter: 'blur(10px)',
+      },
+    }),
   },
   errorBox: {
     backgroundColor: '#fef2f2',
@@ -187,10 +259,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  errorIcon: {
+    fontSize: 18,
+    marginRight: 10,
   },
   errorText: {
     color: '#dc2626',
-    textAlign: 'center',
+    flex: 1,
+    fontSize: 14,
   },
   form: {
     marginBottom: 24,
@@ -198,25 +277,36 @@ const styles = StyleSheet.create({
   toggleContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
-    marginTop: 24,
+    marginTop: 20,
   },
   toggleText: {
-    color: '#6b7280',
+    color: '#7c85a0',
+    fontSize: 14,
   },
   toggleLink: {
-    color: '#3b82f6',
+    color: '#7f68ea',
     fontWeight: '600',
+    fontSize: 14,
   },
   demoBox: {
-    marginTop: 32,
+    marginTop: 16,
     padding: 16,
-    backgroundColor: '#f9fafb',
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
     borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.5)',
+  },
+  demoIcon: {
+    fontSize: 18,
+    marginRight: 10,
   },
   demoText: {
-    color: '#6b7280',
+    color: '#5a6278',
     textAlign: 'center',
-    fontSize: 14,
+    fontSize: 13,
   },
 });
 

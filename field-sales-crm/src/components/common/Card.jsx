@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
   },
   outlined: {
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: '#eceff8',
   },
 });
 

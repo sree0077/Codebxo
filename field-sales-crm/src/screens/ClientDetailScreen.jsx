@@ -6,7 +6,7 @@ import { InteractionCard } from '../components/interaction';
 import { useClients } from '../hooks/useClients';
 import { useInteractions } from '../hooks/useInteractions';
 import { SCREENS, BUSINESS_TYPES, CUSTOMER_POTENTIAL } from '../utils/constants';
-import { makePhoneCall, sendSMS, getInitials, getPotentialColor, formatDate } from '../utils/helpers';
+import { makePhoneCall, sendSMS, getInitials, getPotentialColor, formatDate, getBusinessTypeIcon } from '../utils/helpers';
 
 const ClientDetailScreen = () => {
   const navigation = useNavigation();
@@ -29,6 +29,7 @@ const ClientDetailScreen = () => {
   const businessType = BUSINESS_TYPES.find((b) => b.value === client?.businessType);
   const potential = CUSTOMER_POTENTIAL.find((p) => p.value === client?.customerPotential);
   const potentialColor = getPotentialColor(client?.customerPotential);
+  const businessIcon = getBusinessTypeIcon(client?.businessType);
 
   const handleEdit = useCallback(() => {
     navigation.navigate(SCREENS.EDIT_CLIENT, { clientId });
@@ -128,7 +129,7 @@ const ClientDetailScreen = () => {
           <Card style={styles.cardMargin}>
             <Text style={styles.sectionTitle}>Details</Text>
             <DetailRow label="Phone" value={client.phoneNumber} icon="📱" />
-            <DetailRow label="Business Type" value={businessType?.label} icon="🏢" />
+            <DetailRow label="Business Type" value={businessType?.label} icon={businessIcon} />
             <DetailRow label="Using System" value={client.usingSystem === 'yes' ? 'Yes' : 'No'} icon="💻" />
             {client.location && (
               <DetailRow
@@ -172,7 +173,7 @@ const DetailRow = ({ label, value, icon }) => (
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#eceff8',
   },
   notFoundContainer: {
     flex: 1,
@@ -181,10 +182,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   notFoundText: {
-    color: '#6b7280',
+    color: '#7c85a0',
   },
   header: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#7f68ea',
     paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 32,
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#3b82f6',
+    color: '#7f68ea',
   },
   clientName: {
     color: '#ffffff',
@@ -212,7 +213,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   companyName: {
-    color: '#bfdbfe',
+    color: '#d4d9e8',
     fontSize: 14,
   },
   potentialBadge: {
@@ -254,7 +255,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#d1fae5',
   },
   blueBg: {
-    backgroundColor: '#dbeafe',
+    backgroundColor: '#e8e3fc',
   },
   orangeBg: {
     backgroundColor: '#fed7aa',
@@ -266,13 +267,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   actionLabel: {
-    color: '#4b5563',
+    color: '#5a6278',
     fontSize: 12,
   },
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#2a2e3a',
     marginBottom: 16,
   },
   detailRow: {
@@ -280,17 +281,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#f9fafb',
+    borderBottomColor: '#eceff8',
   },
   detailIcon: {
     marginRight: 8,
   },
   detailLabel: {
-    color: '#6b7280',
+    color: '#7c85a0',
     width: 96,
   },
   detailValue: {
-    color: '#1f2937',
+    color: '#2a2e3a',
     flex: 1,
   },
   interactionsSection: {
@@ -303,7 +304,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   emptyText: {
-    color: '#6b7280',
+    color: '#7c85a0',
     textAlign: 'center',
     paddingVertical: 16,
   },

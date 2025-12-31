@@ -95,14 +95,14 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#f8f9fc',
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#e5e7eb',
+    borderColor: '#eceff8',
     paddingHorizontal: 16,
   },
   inputFocused: {
-    borderColor: '#3b82f6',
+    borderColor: '#7f68ea',
     backgroundColor: '#ffffff',
   },
   inputError: {

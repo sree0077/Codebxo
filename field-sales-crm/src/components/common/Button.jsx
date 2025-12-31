@@ -96,17 +96,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   primary: {
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#7f68ea',
   },
   secondary: {
-    backgroundColor: '#e5e7eb',
+    backgroundColor: '#eceff8',
     borderWidth: 1,
-    borderColor: '#d1d5db',
+    borderColor: '#d4d9e8',
   },
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 2,
-    borderColor: '#3b82f6',
+    borderColor: '#7f68ea',
   },
   danger: {
     backgroundColor: '#ef4444',

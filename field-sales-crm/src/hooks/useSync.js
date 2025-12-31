@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
+import { Platform } from 'react-native';
 import { useDispatch } from 'react-redux';
 import { processSyncQueue, setupSyncListeners, isOnline as checkIsOnline } from '../services/syncService';
 import { loadClients } from '../features/clients/clientsSlice';
@@ -74,8 +75,8 @@ export const useSync = () => {
       setIsOnline(false);
     };
 
-    // Setup listeners
-    if (typeof window !== 'undefined') {
+    // Setup listeners only for web platform
+    if (Platform.OS === 'web' && typeof window !== 'undefined' && window.addEventListener) {
       window.addEventListener('online', handleOnline);
       window.addEventListener('offline', handleOffline);
 
@@ -84,6 +85,9 @@ export const useSync = () => {
         window.removeEventListener('online', handleOnline);
         window.removeEventListener('offline', handleOffline);
       };
+    } else {
+      // For mobile platforms, we don't need online/offline listeners
+      console.log('[SYNC] 📱 Mobile platform - skipping network event listeners');
     }
   }, []); // Empty deps - setup once, use latest values via closure
 

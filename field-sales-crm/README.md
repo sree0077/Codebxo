@@ -28,11 +28,9 @@ A comprehensive CRM (Customer Relationship Management) application for field sal
 - ✅ **Client Search**: Real-time search functionality
 - ✅ **Follow-up Reminders**: Track upcoming follow-ups
 - ✅ **Data Persistence**: All data cached locally for offline access
-- ✅ **OpenStreetMap Integration**: FREE interactive map view with client locations
-- ✅ **Route Planning**: Optimized route calculation for multiple clients (FREE!)
+- ✅ **Route Planning**: Optimized route calculation for multiple clients 
 - ✅ **Turn-by-Turn Directions**: Navigate between client locations
 - ✅ **Distance & Time Estimates**: Calculate travel distance and duration
-- ✅ **No Billing Required**: 100% free maps with OpenRouteService (40k requests/month)
 
 ## 🏗️ Architecture
 
@@ -66,7 +64,7 @@ src/
 | Styling | NativeWind (Tailwind CSS) |
 | Storage | AsyncStorage |
 | Location | expo-location |
-| Maps | OpenStreetMap + OpenRouteService (FREE!) |
+| Maps | Google map |
 | Backend | Firebase (Optional) |
 
 ## 🚀 Getting Started
@@ -101,7 +99,7 @@ npm install
    Fill in your API keys and credentials in `.env`:
    - Google Maps API key
    - Firebase configuration
-   - OpenRouteService API key (optional)
+   
 
    📖 **Detailed setup guide:** See [ENV_SETUP_GUIDE.md](./ENV_SETUP_GUIDE.md)
 
@@ -152,13 +150,8 @@ npm run web
 
 To enable the Maps feature with route planning (100% FREE, no credit card):
 
-1. **Get FREE OpenRouteService API Key:**
-   - Follow the detailed guide in [OPENSTREETMAP_SETUP.md](OPENSTREETMAP_SETUP.md)
-   - Sign up at [OpenRouteService](https://openrouteservice.org/dev/#/signup)
-   - No credit card required!
-   - 40,000 requests/month FREE tier
 
-2. **Configure API Key:**
+1. **Configure API Key:**
    ```bash
    # Copy the example env file
    cp .env.example .env
@@ -167,7 +160,7 @@ To enable the Maps feature with route planning (100% FREE, no credit card):
    EXPO_PUBLIC_OPENROUTE_API_KEY=your_api_key_here
    ```
 
-3. **That's it!** Maps will work immediately with:
+2. **That's it!** Maps will work immediately with:
    - Interactive OpenStreetMap tiles
    - Route planning and optimization
    - Distance and time calculations

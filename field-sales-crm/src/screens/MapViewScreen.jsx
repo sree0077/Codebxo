@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import MapView from '../components/maps/MapView';
 import ClientMarker from '../components/maps/ClientMarker';
@@ -8,7 +9,7 @@ import { Button, LoadingSpinner } from '../components/common';
 import { useClients } from '../hooks/useClients';
 import { useLocation } from '../hooks/useLocation';
 import { useRouteOptimization } from '../hooks/useRouteOptimization';
-import { getRegionFromCoordinates, formatDistance, formatDuration } from '../services/mapsService';
+import { getRegionFromCoordinates, formatDistance, formatDuration, decodePolyline } from '../services/mapsService';
 import { SCREENS } from '../utils/constants';
 
 const MapViewScreen = () => {
@@ -23,10 +24,28 @@ const MapViewScreen = () => {
   const [mapRegion, setMapRegion] = useState(null);
   const [showRoutePanel, setShowRoutePanel] = useState(false);
 
-  // Filter clients with valid locations
-  const clientsWithLocation = filteredClients.filter(
-    client => client.location?.latitude && client.location?.longitude
-  );
+  // Filter clients with valid locations and fix invalid coordinates
+  const clientsWithLocation = filteredClients
+    .filter(client => client.location?.latitude && client.location?.longitude)
+    .map(client => {
+      // Fix coordinates that are missing decimal points (e.g., 12466208 should be 12.466208)
+      let { latitude, longitude } = client.location;
+
+      // If latitude is > 90 or < -90, it's likely missing decimal point
+      if (Math.abs(latitude) > 90) {
+        latitude = latitude / 1000000;
+      }
+
+      // If longitude is > 180 or < -180, it's likely missing decimal point
+      if (Math.abs(longitude) > 180) {
+        longitude = longitude / 1000000;
+      }
+
+      return {
+        ...client,
+        location: { latitude, longitude }
+      };
+    });
 
   // Initialize map region
   useEffect(() => {
@@ -124,7 +143,7 @@ const MapViewScreen = () => {
           {clientsWithLocation.map((client, index) => {
             const isSelected = selectedClients.some(c => c.id === client.id);
             const routeIndex = route?.clients.findIndex(c => c.id === client.id);
-            
+
             return (
               <ClientMarker
                 key={client.id}
@@ -137,10 +156,11 @@ const MapViewScreen = () => {
           })}
 
           {/* Route Polyline */}
-          {route && (
+          {route && (route.polyline || route.coordinates) && (
             <RoutePolyline
               encodedPolyline={route.polyline}
-              strokeColor="#3b82f6"
+              coordinates={route.coordinates}
+              strokeColor="#7f68ea"
               strokeWidth={4}
             />
           )}
@@ -213,7 +233,7 @@ const MapViewScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#eceff8',
   },
   mapContainer: {
     flex: 1,

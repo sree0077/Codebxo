@@ -1,7 +1,8 @@
 import React, { useCallback } from 'react';
-import { View, Text, SafeAreaView, FlatList, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
-import { SearchBar, LoadingSpinner, EmptyState, OnlineStatusIndicator } from '../components/common';
+import { SearchBar, LoadingSpinner, EmptyState } from '../components/common';
 import { ClientCard } from '../components/client';
 import { useClients } from '../hooks/useClients';
 import { useAuth } from '../hooks/useAuth';
@@ -53,7 +54,6 @@ const ClientListScreen = () => {
             </Text>
           </View>
           <View style={styles.headerRight}>
-            <OnlineStatusIndicator />
             <TouchableOpacity
               onPress={logout}
               style={styles.logoutButton}
@@ -121,14 +121,14 @@ const ClientListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: '#eceff8',
   },
   header: {
     backgroundColor: '#ffffff',
     paddingHorizontal: 16,
     paddingVertical: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
+    borderBottomColor: '#eceff8',
   },
   headerTop: {
     flexDirection: 'row',
@@ -146,27 +146,27 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1f2937',
+    color: '#2a2e3a',
   },
   subtitle: {
-    color: '#6b7280',
+    color: '#7c85a0',
     fontSize: 14,
   },
   logoutButton: {
-    backgroundColor: '#f3f4f6',
+    backgroundColor: '#eceff8',
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     marginTop: 4,
   },
   logoutText: {
-    color: '#4b5563',
+    color: '#5a6278',
   },
   mapViewButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#7f68ea',
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 8,
@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     right: 24,
     width: 56,
     height: 56,
-    backgroundColor: '#3b82f6',
+    backgroundColor: '#7f68ea',
     borderRadius: 28,
     alignItems: 'center',
     justifyContent: 'center',

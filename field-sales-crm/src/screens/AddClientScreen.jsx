@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Alert, Platform, StyleSheet } from 'react-native';
+import { Alert, Platform, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ClientForm } from '../components/client';
 import { useClients } from '../hooks/useClients';

@@ -105,16 +105,25 @@ export const loginUser = async (email, password) => {
 
     if (userDoc.exists()) {
       userData = { ...userData, ...userDoc.data() };
+      // Fallback for existing users: if they have a role but no status, they are approved
+      if (!userData.status) {
+        userData.status = 'approved';
+      }
     } else {
-      // If user document doesn't exist (e.g., first login of legacy user), create it
-      const userData = {
+      // If user document doesn't exist (first login of legacy user), create it as pending
+      const newDocData = {
         email: user.email,
         role: 'user',
-        status: 'pending', // Default for self-registered users
+        status: 'pending',
         createdAt: serverTimestamp(),
       };
-      await setDoc(userDocRef, userData);
-      return { success: true, user: userData };
+      await setDoc(userDocRef, newDocData);
+      userData = { ...userData, ...newDocData };
+    }
+
+    // Admins are always approved
+    if (userData.role === 'admin') {
+      userData.status = 'approved';
     }
 
     if (userData.status === 'rejected') {

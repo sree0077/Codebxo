@@ -31,14 +31,16 @@ export const loadUser = createAsyncThunk('auth/loadUser', async () => {
       console.log('User loaded from Firebase:', user.email);
       // Fetch user role from Firestore
       const result = await getUserData(user.uid);
-      const role = result.success ? result.userData.role : 'user';
+      const roleValue = result.userData?.role || 'user';
+      // Approved if record exists with a role (legacy user) or explicitly approved
+      const statusValue = result.userData?.status || (result.userData?.role ? 'approved' : 'pending');
 
       return {
         id: user.uid,
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0],
-        role: result.userData?.role || 'user',
-        status: result.userData?.status || 'pending', // Default to pending if record missing or legacy
+        role: roleValue,
+        status: roleValue === 'admin' ? 'approved' : statusValue,
       };
     }
     console.log('No user found in Firebase auth state');

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getAllUsers, deleteUserAccount, registerUser } from '../services/firebase';
+import { getAllUsers, deleteUserAccount, registerUser, updateUserStatus } from '../services/firebase';
 import { Button, Input, LoadingSpinner, Dropdown } from '../components/common';
 
 const UserManagementScreen = () => {
@@ -27,6 +27,17 @@ const UserManagementScreen = () => {
         fetchUsers();
     }, []);
 
+    const handleUpdateStatus = async (userId, status) => {
+        setIsLoading(true);
+        const result = await updateUserStatus(userId, status);
+        if (result.success) {
+            fetchUsers();
+        } else {
+            Alert.alert("Error", result.error);
+        }
+        setIsLoading(true);
+    };
+
     const handleDeleteUser = (userId, email) => {
         Alert.alert(
             "Delete User",
@@ -50,7 +61,7 @@ const UserManagementScreen = () => {
     const handleCreateUser = async () => {
         if (!newEmail || !newPassword) return;
         setIsLoading(true);
-        const result = await registerUser(newEmail, newPassword, newRole);
+        const result = await registerUser(newEmail, newPassword, newRole, 'approved');
         if (result.success) {
             setIsModalVisible(false);
             setNewEmail('');
@@ -66,11 +77,32 @@ const UserManagementScreen = () => {
         <View style={styles.userCard}>
             <TouchableOpacity
                 style={styles.userInfo}
-                onPress={() => Alert.alert("User Details", `Email: ${item.email}\nRole: ${item.role || 'user'}`)}
+                onPress={() => Alert.alert("User Details", `Email: ${item.email}\nRole: ${item.role || 'user'}\nStatus: ${item.status || 'approved'}`)}
             >
                 <Text style={styles.userEmail}>{item.email}</Text>
-                <Text style={styles.userRole}>Role: {item.role || 'user'}</Text>
+                <View style={styles.roleContainer}>
+                    <Text style={styles.userRole}>Role: {item.role || 'user'}</Text>
+                    <View style={[styles.statusBadge, item.status === 'pending' ? styles.pendingBadge : item.status === 'rejected' ? styles.rejectedBadge : styles.approvedBadge]}>
+                        <Text style={styles.statusText}>{item.status || 'approved'}</Text>
+                    </View>
+                </View>
             </TouchableOpacity>
+            {item.status === 'pending' && (
+                <View style={styles.approvalActions}>
+                    <TouchableOpacity
+                        onPress={() => handleUpdateStatus(item.id, 'approved')}
+                        style={[styles.actionBtn, styles.approveBtn]}
+                    >
+                        <Text style={styles.actionBtnText}>✓</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        onPress={() => handleUpdateStatus(item.id, 'rejected')}
+                        style={[styles.actionBtn, styles.rejectBtn]}
+                    >
+                        <Text style={styles.actionBtnText}>✗</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
             <TouchableOpacity
                 onPress={() => handleDeleteUser(item.id, item.email)}
                 style={styles.deleteButton}
@@ -211,8 +243,56 @@ const styles = StyleSheet.create({
         padding: 8,
         backgroundColor: '#fecaca',
         borderRadius: 8,
+        marginLeft: 10,
     },
     deleteIcon: {
+        fontSize: 16,
+    },
+    roleContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 4,
+    },
+    statusBadge: {
+        marginLeft: 10,
+        paddingHorizontal: 8,
+        paddingVertical: 2,
+        borderRadius: 10,
+    },
+    approvedBadge: {
+        backgroundColor: '#d1fae5',
+    },
+    pendingBadge: {
+        backgroundColor: '#fef3c7',
+    },
+    rejectedBadge: {
+        backgroundColor: '#fee2e2',
+    },
+    statusText: {
+        fontSize: 10,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
+    },
+    approvalActions: {
+        flexDirection: 'row',
+        marginRight: 10,
+    },
+    actionBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginLeft: 8,
+    },
+    approveBtn: {
+        backgroundColor: '#d1fae5',
+    },
+    rejectBtn: {
+        backgroundColor: '#fee2e2',
+    },
+    actionBtnText: {
+        fontWeight: 'bold',
         fontSize: 16,
     },
     emptyText: {

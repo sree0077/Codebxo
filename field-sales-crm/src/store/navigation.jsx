@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector, useDispatch } from 'react-redux';
@@ -110,6 +110,36 @@ const AdminStack = () => (
   </Stack.Navigator>
 );
 
+const AwaitingApprovalScreen = () => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+
+  return (
+    <View style={styles.approvalContainer}>
+      <Text style={styles.approvalIcon}>⌛</Text>
+      <Text style={styles.approvalTitle}>Awaiting Approval</Text>
+      <Text style={styles.approvalText}>
+        Hello, {user?.displayName || user?.email}. Your account is currently pending approval by an administrator.
+      </Text>
+      <Text style={styles.approvalSubtitle}>
+        Once approved, you will be able to access the dashboard.
+      </Text>
+      <TouchableOpacity
+        style={styles.retryButton}
+        onPress={() => dispatch(loadUser())}
+      >
+        <Text style={styles.retryText}>Check Status</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.logoutLink}
+        onPress={() => dispatch(require('../features/auth/authSlice').logoutUser())}
+      >
+        <Text style={styles.logoutLinkText}>Logout</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
 // Simple loading component
 const LoadingScreen = () => (
   <View style={styles.loadingContainer}>
@@ -140,6 +170,10 @@ const Navigation = () => {
       <NavigationContainer>
         {!isAuthenticated ? (
           <AuthStack />
+        ) : user?.status === 'pending' ? (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="AwaitingApproval" component={AwaitingApprovalScreen} />
+          </Stack.Navigator>
         ) : user?.role === 'admin' ? (
           <AdminStack />
         ) : (
@@ -165,6 +199,56 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: '#4b5563',
+  },
+  approvalContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 30,
+    backgroundColor: '#ffffff',
+  },
+  approvalIcon: {
+    fontSize: 60,
+    marginBottom: 20,
+  },
+  approvalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 10,
+  },
+  approvalText: {
+    fontSize: 16,
+    color: '#475569',
+    textAlign: 'center',
+    marginBottom: 8,
+    lineHeight: 24,
+  },
+  approvalSubtitle: {
+    fontSize: 14,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 30,
+  },
+  retryButton: {
+    backgroundColor: '#7f68ea',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginBottom: 20,
+  },
+  retryText: {
+    color: '#ffffff',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  logoutLink: {
+    padding: 10,
+  },
+  logoutLinkText: {
+    color: '#7f68ea',
+    fontSize: 14,
+    fontWeight: '500',
   },
 });
 

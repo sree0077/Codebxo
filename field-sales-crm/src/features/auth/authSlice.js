@@ -37,7 +37,8 @@ export const loadUser = createAsyncThunk('auth/loadUser', async () => {
         id: user.uid,
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0],
-        role: role,
+        role: result.userData.role || 'user',
+        status: result.userData.status || 'approved', // Approved by default for legacy
       };
     }
     console.log('No user found in Firebase auth state');
@@ -62,6 +63,7 @@ export const loginUser = createAsyncThunk(
           email: result.user.email,
           displayName: result.user.displayName || result.user.email?.split('@')[0],
           role: result.user.role,
+          status: result.user.status,
         };
       }
       console.error('[AUTH] ❌ Login failed:', result.error);
@@ -76,10 +78,10 @@ export const loginUser = createAsyncThunk(
 // Async thunk for registration with Firebase
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
-  async ({ email, password, role = 'user' }, { rejectWithValue }) => {
+  async ({ email, password, role = 'user', status = null }, { rejectWithValue }) => {
     try {
-      console.log('[AUTH] 📝 Registration attempt for:', email, 'Role:', role);
-      const result = await firebaseRegister(email, password, role);
+      console.log('[AUTH] 📝 Registration attempt for:', email, 'Role:', role, 'Status:', status);
+      const result = await firebaseRegister(email, password, role, status);
       if (result.success) {
         console.log('[AUTH] ✅ Registration successful:', result.user.email);
         return {
@@ -87,6 +89,7 @@ export const registerUser = createAsyncThunk(
           email: result.user.email,
           displayName: result.user.displayName || result.user.email?.split('@')[0],
           role: result.user.role,
+          status: result.user.status,
         };
       }
       console.error('[AUTH] ❌ Registration failed:', result.error);

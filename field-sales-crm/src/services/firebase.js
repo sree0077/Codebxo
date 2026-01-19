@@ -107,36 +107,53 @@ export const loginUser = async (email, password) => {
       userData = { ...userData, ...userDoc.data() };
     } else {
       // If user document doesn't exist (e.g., first login of legacy user), create it
-      await setDoc(userDocRef, {
+      const userData = {
         email: user.email,
         role: 'user',
+        status: 'pending', // Default for self-registered users
         createdAt: serverTimestamp(),
-      });
+      };
+      await setDoc(userDocRef, userData);
+      return { success: true, user: userData };
     }
 
-    console.log('[FIREBASE] ✅ Login successful, role:', userData.role);
-    return { success: true, user: userData };
+    if (userData.status === 'rejected') {
+      return { success: false, error: 'Your account has been rejected by the administrator.' };
+    }
+
+    console.log('[FIREBASE] ✅ Login successful, status:', userData.status);
+    return { success: true, user: { ...userData, uid: user.uid } };
   } catch (error) {
     console.error('[FIREBASE] ❌ Login error:', error.code, error.message);
     return { success: false, error: error.message };
   }
 };
 
-export const registerUser = async (email, password, role = 'user') => {
+export const registerUser = async (email, password, role = 'user', status = null) => {
   try {
-    console.log('[FIREBASE] 📝 Attempting registration for:', email, 'Role:', role);
+    console.log('[FIREBASE] 📝 Attempting registration for:', email, 'Role:', role, 'Status:', status);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
     // Create user document in Firestore
-    await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+    const userData = {
       email: user.email,
       role: role,
+      status: status || (role === 'admin' ? 'approved' : 'pending'),
       createdAt: serverTimestamp(),
-    });
+    };
+
+    // If an admin is creating a user, it should be approved by default
+    if (auth.currentUser && role !== 'admin') {
+      // Logic for admin creating a user could be different, 
+      // but for now we follow the 'status' passed or default logic.
+      // If we use this function in Admin panel, we might want to pass status='approved'
+    }
+
+    await setDoc(doc(db, COLLECTIONS.USERS, user.uid), userData);
 
     console.log('[FIREBASE] ✅ Registration successful');
-    return { success: true, user: { uid: user.uid, email: user.email, role: role } };
+    return { success: true, user: { uid: user.uid, ...userData } };
   } catch (error) {
     console.error('[FIREBASE] ❌ Registration error:', error.code, error.message);
     return { success: false, error: error.message };
@@ -169,10 +186,19 @@ export const getAllUsers = async () => {
 export const deleteUserAccount = async (userId) => {
   try {
     await deleteDoc(doc(db, COLLECTIONS.USERS, userId));
-    // Note: This only deletes the Firestore doc. 
-    // Real Auth deletion requires Admin SDK or manual action in Console.
     return { success: true };
   } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateUserStatus = async (userId, status) => {
+  try {
+    const userRef = doc(db, COLLECTIONS.USERS, userId);
+    await updateDoc(userRef, { status, updatedAt: serverTimestamp() });
+    return { success: true };
+  } catch (error) {
+    console.error('[FIREBASE] ❌ Error updating status:', error.message);
     return { success: false, error: error.message };
   }
 };

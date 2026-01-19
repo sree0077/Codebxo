@@ -98,6 +98,16 @@ const LoginScreen = () => {
                   </View>
                 )}
 
+                {/* Info Message for Pending Status */}
+                {!error && !isLoading && !isLogin && (
+                  <View style={[styles.errorBox, { backgroundColor: '#e0f2fe', borderColor: '#bae6fd' }]}>
+                    <Text style={styles.errorIcon}>ℹ️</Text>
+                    <Text style={[styles.errorText, { color: '#0369a1' }]}>
+                      Success! Your account is pending admin approval.
+                    </Text>
+                  </View>
+                )}
+
                 {/* Form */}
                 <View style={styles.form}>
                   <Input

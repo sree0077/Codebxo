@@ -31,7 +31,7 @@ export const loadInteractions = createAsyncThunk(
             createdAt: interaction.createdAt?.toDate?.()?.toISOString() || interaction.createdAt,
           }));
           // Save to local storage for offline access
-          await saveInteractions(interactions);
+          await saveInteractions(userId, interactions);
           console.log('[INTERACTIONS] ✅ Loaded from Firebase and saved to local storage');
           return interactions;
         }
@@ -39,12 +39,12 @@ export const loadInteractions = createAsyncThunk(
 
       // If offline or Firebase failed, load from local storage
       console.log('[INTERACTIONS] 📴 Loading from local storage (offline mode)');
-      const storageResult = await loadInteractionsFromStorage();
+      const storageResult = await loadInteractionsFromStorage(userId);
       return storageResult.data || [];
     } catch (error) {
       console.error('[INTERACTIONS] ❌ Error loading interactions:', error);
       // Fallback to local storage
-      const storageResult = await loadInteractionsFromStorage();
+      const storageResult = await loadInteractionsFromStorage(userId);
       return storageResult.data || [];
     }
   }
@@ -75,14 +75,14 @@ export const addInteraction = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('ADD_INTERACTION', { ...interactionData, userId }, () => {});
+        await executeOrQueue('ADD_INTERACTION', { ...interactionData, userId }, () => { });
         console.log('[INTERACTIONS] 📴 Interaction queued for sync');
       }
 
       // Save updated interactions to local storage
       const state = getState();
       const updatedInteractions = [newInteraction, ...state.interactions.items];
-      await saveInteractions(updatedInteractions);
+      await saveInteractions(userId, updatedInteractions);
 
       return newInteraction;
     } catch (error) {
@@ -103,7 +103,7 @@ export const updateInteraction = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('UPDATE_INTERACTION', { id: interactionId, ...interactionData }, () => {});
+        await executeOrQueue('UPDATE_INTERACTION', { id: interactionId, ...interactionData }, () => { });
         console.log('[INTERACTIONS] 📴 Interaction update queued for sync');
       }
 
@@ -112,7 +112,7 @@ export const updateInteraction = createAsyncThunk(
       const updatedInteractions = state.interactions.items.map(i =>
         i.id === interactionId ? { ...i, ...interactionData } : i
       );
-      await saveInteractions(updatedInteractions);
+      await saveInteractions(userId, updatedInteractions);
 
       return { interactionId, interactionData };
     } catch (error) {
@@ -133,14 +133,14 @@ export const deleteInteraction = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('DELETE_INTERACTION', { id: interactionId }, () => {});
+        await executeOrQueue('DELETE_INTERACTION', { id: interactionId }, () => { });
         console.log('[INTERACTIONS] 📴 Interaction deletion queued for sync');
       }
 
       // Save updated interactions to local storage
       const state = getState();
       const updatedInteractions = state.interactions.items.filter(i => i.id !== interactionId);
-      await saveInteractions(updatedInteractions);
+      await saveInteractions(userId, updatedInteractions);
 
       return interactionId;
     } catch (error) {

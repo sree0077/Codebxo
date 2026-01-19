@@ -20,6 +20,9 @@ import {
   query,
   where,
   orderBy,
+  where,
+  orderBy,
+  getDoc,
   serverTimestamp
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -90,8 +93,31 @@ export const loginUser = async (email, password) => {
   try {
     console.log('[FIREBASE] 🔐 Attempting login for:', email);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    console.log('[FIREBASE] ✅ Login successful');
-    return { success: true, user: userCredential.user };
+    const user = userCredential.user;
+
+    // Fetch user role from Firestore
+    const userDocRef = doc(db, COLLECTIONS.USERS, user.uid);
+    const userDoc = await getDoc(userDocRef);
+
+    let userData = {
+      uid: user.uid,
+      email: user.email,
+      role: 'user', // Default role
+    };
+
+    if (userDoc.exists()) {
+      userData = { ...userData, ...userDoc.data() };
+    } else {
+      // If user document doesn't exist (e.g., first login of legacy user), create it
+      await setDoc(userDocRef, {
+        email: user.email,
+        role: 'user',
+        createdAt: serverTimestamp(),
+      });
+    }
+
+    console.log('[FIREBASE] ✅ Login successful, role:', userData.role);
+    return { success: true, user: userData };
   } catch (error) {
     console.error('[FIREBASE] ❌ Login error:', error.code, error.message);
     return { success: false, error: error.message };
@@ -102,10 +128,41 @@ export const registerUser = async (email, password) => {
   try {
     console.log('[FIREBASE] 📝 Attempting registration for:', email);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+
+    // Create user document in Firestore
+    await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
+      email: user.email,
+      role: 'user',
+      createdAt: serverTimestamp(),
+    });
+
     console.log('[FIREBASE] ✅ Registration successful');
-    return { success: true, user: userCredential.user };
+    return { success: true, user: { uid: user.uid, email: user.email, role: 'user' } };
   } catch (error) {
     console.error('[FIREBASE] ❌ Registration error:', error.code, error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+// Admin Functions
+export const getAllUsers = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, COLLECTIONS.USERS));
+    const users = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    return { success: true, users };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
+export const deleteUserAccount = async (userId) => {
+  try {
+    await deleteDoc(doc(db, COLLECTIONS.USERS, userId));
+    // Note: This only deletes the Firestore doc. 
+    // Real Auth deletion requires Admin SDK or manual action in Console.
+    return { success: true };
+  } catch (error) {
     return { success: false, error: error.message };
   }
 };

@@ -114,22 +114,23 @@ export const clearAllStorage = async () => {
 };
 
 // Client Storage Operations
-export const saveClients = (clients) => saveToStorage(STORAGE_KEYS.CLIENTS, clients);
-export const loadClients = () => loadFromStorage(STORAGE_KEYS.CLIENTS);
-export const clearClients = () => removeFromStorage(STORAGE_KEYS.CLIENTS);
+export const saveClients = (userId, clients) => saveToStorage(`${STORAGE_KEYS.CLIENTS}_${userId}`, clients);
+export const loadClients = (userId) => loadFromStorage(`${STORAGE_KEYS.CLIENTS}_${userId}`);
+export const clearClients = (userId) => removeFromStorage(`${STORAGE_KEYS.CLIENTS}_${userId}`);
 
 // Interaction Storage Operations
-export const saveInteractions = (interactions) => saveToStorage(STORAGE_KEYS.INTERACTIONS, interactions);
-export const loadInteractions = () => loadFromStorage(STORAGE_KEYS.INTERACTIONS);
-export const clearInteractions = () => removeFromStorage(STORAGE_KEYS.INTERACTIONS);
+export const saveInteractions = (userId, interactions) => saveToStorage(`${STORAGE_KEYS.INTERACTIONS}_${userId}`, interactions);
+export const loadInteractions = (userId) => loadFromStorage(`${STORAGE_KEYS.INTERACTIONS}_${userId}`);
+export const clearInteractions = (userId) => removeFromStorage(`${STORAGE_KEYS.INTERACTIONS}_${userId}`);
 
 // Sync Queue Operations
-export const addToSyncQueue = async (operation) => {
+export const addToSyncQueue = async (userId, operation) => {
   try {
-    const result = await loadFromStorage(STORAGE_KEYS.SYNC_QUEUE);
+    const key = `${STORAGE_KEYS.SYNC_QUEUE}_${userId}`;
+    const result = await loadFromStorage(key);
     const queue = result.data || [];
     queue.push({ ...operation, timestamp: Date.now() });
-    await saveToStorage(STORAGE_KEYS.SYNC_QUEUE, queue);
+    await saveToStorage(key, queue);
     console.log('[STORAGE] ✅ Added to sync queue:', operation.type);
     return { success: true };
   } catch (error) {
@@ -138,12 +139,12 @@ export const addToSyncQueue = async (operation) => {
   }
 };
 
-export const getSyncQueue = () => loadFromStorage(STORAGE_KEYS.SYNC_QUEUE);
-export const clearSyncQueue = () => saveToStorage(STORAGE_KEYS.SYNC_QUEUE, []);
+export const getSyncQueue = (userId) => loadFromStorage(`${STORAGE_KEYS.SYNC_QUEUE}_${userId}`);
+export const clearSyncQueue = (userId) => saveToStorage(`${STORAGE_KEYS.SYNC_QUEUE}_${userId}`, []);
 
 // Last Sync Timestamp
-export const saveLastSyncTime = () => saveToStorage(STORAGE_KEYS.LAST_SYNC, Date.now());
-export const getLastSyncTime = () => loadFromStorage(STORAGE_KEYS.LAST_SYNC);
+export const saveLastSyncTime = (userId) => saveToStorage(`${STORAGE_KEYS.LAST_SYNC}_${userId}`, Date.now());
+export const getLastSyncTime = (userId) => loadFromStorage(`${STORAGE_KEYS.LAST_SYNC}_${userId}`);
 
 export { STORAGE_KEYS };
 

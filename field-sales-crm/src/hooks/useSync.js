@@ -35,7 +35,7 @@ export const useSync = () => {
 
     try {
       // Process sync queue (pending offline operations)
-      const result = await processSyncQueue();
+      const result = await processSyncQueue(user.id);
       console.log('[SYNC] ✅ Sync queue processed:', result);
 
       // Small delay to ensure Firebase has processed everything

@@ -36,14 +36,19 @@ export const isOnline = () => {
 /**
  * Process sync queue - sync all pending operations to Firebase
  */
-export const processSyncQueue = async () => {
+export const processSyncQueue = async (userId) => {
+  if (!userId) {
+    console.error('[SYNC] ❌ Missing userId for sync');
+    return { success: false, error: 'Missing userId' };
+  }
+
   if (!isOnline()) {
     console.log('[SYNC] ⚠️ Device is offline, skipping sync');
     return { success: false, error: 'Device is offline' };
   }
 
   try {
-    const result = await getSyncQueue();
+    const result = await getSyncQueue(userId);
     const queue = result.data || [];
 
     if (queue.length === 0) {
@@ -51,7 +56,7 @@ export const processSyncQueue = async () => {
       return { success: true, synced: 0 };
     }
 
-    console.log(`[SYNC] 🔄 Processing ${queue.length} pending operations...`);
+    console.log(`[SYNC] 🔄 Processing ${queue.length} pending operations for user ${userId}...`);
 
     let successCount = 0;
     let failedOperations = [];
@@ -68,15 +73,15 @@ export const processSyncQueue = async () => {
 
     // Keep failed operations in queue
     if (failedOperations.length > 0) {
-      await clearSyncQueue();
+      await clearSyncQueue(userId);
       for (const op of failedOperations) {
-        await addToSyncQueue(op);
+        await addToSyncQueue(userId, op);
       }
     } else {
-      await clearSyncQueue();
+      await clearSyncQueue(userId);
     }
 
-    await saveLastSyncTime();
+    await saveLastSyncTime(userId);
 
     console.log(`[SYNC] ✅ Synced ${successCount}/${queue.length} operations`);
     return { success: true, synced: successCount, failed: failedOperations.length };
@@ -113,15 +118,16 @@ const processOperation = async (operation) => {
 /**
  * Queue an operation for later sync (when offline)
  */
-export const queueOperation = async (type, data) => {
-  console.log(`[SYNC] 📝 Queuing operation: ${type}`);
-  return await addToSyncQueue({ type, data });
+export const queueOperation = async (userId, type, data) => {
+  if (!userId) return { success: false, error: 'Missing userId' };
+  console.log(`[SYNC] 📝 Queuing operation: ${type} for user ${userId}`);
+  return await addToSyncQueue(userId, { type, data });
 };
 
 /**
  * Execute operation immediately if online, queue if offline
  */
-export const executeOrQueue = async (type, data, executeFunction) => {
+export const executeOrQueue = async (userId, type, data, executeFunction) => {
   if (isOnline()) {
     try {
       const result = await executeFunction();
@@ -129,12 +135,12 @@ export const executeOrQueue = async (type, data, executeFunction) => {
     } catch (error) {
       // If online operation fails, queue it
       console.log('[SYNC] ⚠️ Online operation failed, queuing for later');
-      await queueOperation(type, data);
+      await queueOperation(userId, type, data);
       return { success: false, error: error.message, queued: true };
     }
   } else {
     // Queue for later sync
-    await queueOperation(type, data);
+    await queueOperation(userId, type, data);
     return { success: true, queued: true };
   }
 };

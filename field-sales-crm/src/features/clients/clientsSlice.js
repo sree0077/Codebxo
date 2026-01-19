@@ -37,7 +37,7 @@ export const loadClients = createAsyncThunk(
             updatedAt: client.updatedAt?.toDate?.()?.toISOString() || client.updatedAt,
           }));
           // Save to local storage for offline access
-          await saveClients(clients);
+          await saveClients(userId, clients);
           console.log('[CLIENTS] ✅ Loaded', clients.length, 'clients from Firebase');
           return clients;
         }
@@ -45,12 +45,12 @@ export const loadClients = createAsyncThunk(
 
       // If offline or Firebase failed, load from local storage
       console.log('[CLIENTS] 📴 Loading from local storage (offline mode)');
-      const storageResult = await loadClientsFromStorage();
+      const storageResult = await loadClientsFromStorage(userId);
       return storageResult.data || [];
     } catch (error) {
       console.error('[CLIENTS] ❌ Error loading clients:', error.message);
       // Fallback to local storage
-      const storageResult = await loadClientsFromStorage();
+      const storageResult = await loadClientsFromStorage(userId);
       return storageResult.data || [];
     }
   }
@@ -84,7 +84,7 @@ export const addClient = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('ADD_CLIENT', { ...clientData, userId }, () => {});
+        await executeOrQueue('ADD_CLIENT', { ...clientData, userId }, () => { });
         console.log('[CLIENTS] 📴 Client queued for sync');
       }
 
@@ -95,7 +95,7 @@ export const addClient = createAsyncThunk(
         !c.id.startsWith('temp_') || c.id === newClient.id
       );
       const updatedClients = [newClient, ...existingClients];
-      await saveClients(updatedClients);
+      await saveClients(userId, updatedClients);
 
       return newClient;
     } catch (error) {
@@ -119,7 +119,7 @@ export const updateClient = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('UPDATE_CLIENT', { id: clientId, ...clientData }, () => {});
+        await executeOrQueue('UPDATE_CLIENT', { id: clientId, ...clientData }, () => { });
         console.log('[CLIENTS] 📴 Client update queued for sync');
       }
 
@@ -128,7 +128,7 @@ export const updateClient = createAsyncThunk(
       const updatedClients = state.clients.items.map(c =>
         c.id === clientId ? { ...c, ...updatedData } : c
       );
-      await saveClients(updatedClients);
+      await saveClients(userId, updatedClients);
 
       return { clientId, clientData: updatedData };
     } catch (error) {
@@ -149,14 +149,14 @@ export const deleteClient = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('DELETE_CLIENT', { id: clientId }, () => {});
+        await executeOrQueue('DELETE_CLIENT', { id: clientId }, () => { });
         console.log('[CLIENTS] 📴 Client deletion queued for sync');
       }
 
       // Save updated clients to local storage
       const state = getState();
       const updatedClients = state.clients.items.filter(c => c.id !== clientId);
-      await saveClients(updatedClients);
+      await saveClients(userId, updatedClients);
 
       return clientId;
     } catch (error) {

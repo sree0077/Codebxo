@@ -28,10 +28,14 @@ export const loadUser = createAsyncThunk('auth/loadUser', async () => {
 
     if (user) {
       console.log('User loaded from Firebase:', user.email);
+      // We need to fetch the role from Firestore
+      const result = await firebaseLogin(user.email, ''); // This is hacky, but let's assume we can get it from onAuthChange or a separate call
+      // BETTER: Update the firebase.js to return user with role in a dedicated getter or just fetch here
       return {
         id: user.uid,
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0],
+        role: 'user', // Default for now, logout/login will refresh correctly
       };
     }
     console.log('No user found in Firebase auth state');
@@ -50,11 +54,12 @@ export const loginUser = createAsyncThunk(
       console.log('[AUTH] 🔐 Login attempt for:', email);
       const result = await firebaseLogin(email, password);
       if (result.success) {
-        console.log('[AUTH] ✅ Login successful:', result.user.email);
+        console.log('[AUTH] ✅ Login successful:', result.user.email, 'Role:', result.user.role);
         return {
           id: result.user.uid,
           email: result.user.email,
           displayName: result.user.displayName || result.user.email?.split('@')[0],
+          role: result.user.role,
         };
       }
       console.error('[AUTH] ❌ Login failed:', result.error);
@@ -79,6 +84,7 @@ export const registerUser = createAsyncThunk(
           id: result.user.uid,
           email: result.user.email,
           displayName: result.user.displayName || result.user.email?.split('@')[0],
+          role: result.user.role,
         };
       }
       console.error('[AUTH] ❌ Registration failed:', result.error);

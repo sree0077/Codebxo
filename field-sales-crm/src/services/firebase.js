@@ -24,6 +24,7 @@ import {
   serverTimestamp
 } from 'firebase/firestore';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { mapAuthError } from '../utils/authErrors';
 
 // Firebase configuration from environment variables
 const firebaseConfig = {
@@ -134,7 +135,7 @@ export const loginUser = async (email, password) => {
     return { success: true, user: { ...userData, uid: user.uid } };
   } catch (error) {
     console.error('[FIREBASE] ❌ Login error:', error.code, error.message);
-    return { success: false, error: error.message };
+    return { success: false, error: mapAuthError(error.code) };
   }
 };
 
@@ -165,7 +166,7 @@ export const registerUser = async (email, password, role = 'user', status = null
     return { success: true, user: { uid: user.uid, ...userData } };
   } catch (error) {
     console.error('[FIREBASE] ❌ Registration error:', error.code, error.message);
-    return { success: false, error: error.message };
+    return { success: false, error: mapAuthError(error.code) };
   }
 };
 
@@ -194,9 +195,12 @@ export const getAllUsers = async () => {
 
 export const deleteUserAccount = async (userId) => {
   try {
+    console.log('[FIREBASE] 🗑️ Deleting user record from Firestore:', userId);
     await deleteDoc(doc(db, COLLECTIONS.USERS, userId));
+    // Note: Deleting Auth credentials requires Admin SDK/Cloud Functions
     return { success: true };
   } catch (error) {
+    console.error('[FIREBASE] ❌ Error deleting user record:', error.message);
     return { success: false, error: error.message };
   }
 };
@@ -208,6 +212,20 @@ export const updateUserStatus = async (userId, status) => {
     return { success: true };
   } catch (error) {
     console.error('[FIREBASE] ❌ Error updating status:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+export const updateUserDetails = async (userId, details) => {
+  try {
+    const userRef = doc(db, COLLECTIONS.USERS, userId);
+    await updateDoc(userRef, {
+      ...details,
+      updatedAt: serverTimestamp()
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('[FIREBASE] ❌ Error updating user details:', error.message);
     return { success: false, error: error.message };
   }
 };

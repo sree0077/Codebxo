@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getAllUsers, deleteUserAccount, registerUser, updateUserStatus } from '../services/firebase';
+import { getAllUsers, deleteUserAccount, registerUser, updateUserStatus, updateUserDetails } from '../services/firebase';
 import { Button, Input, LoadingSpinner, Dropdown } from '../components/common';
 
 const UserManagementScreen = () => {
@@ -13,6 +13,12 @@ const UserManagementScreen = () => {
     const [newEmail, setNewEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [newRole, setNewRole] = useState('user');
+
+    // Edit state
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [editingUser, setEditingUser] = useState(null);
+    const [editRole, setEditRole] = useState('user');
+    const [editStatus, setEditStatus] = useState('approved');
 
     const fetchUsers = async () => {
         setIsLoading(true);
@@ -48,9 +54,13 @@ const UserManagementScreen = () => {
                     text: "Delete",
                     style: "destructive",
                     onPress: async () => {
+                        setIsLoading(true);
                         const result = await deleteUserAccount(userId);
                         if (result.success) {
                             fetchUsers();
+                        } else {
+                            setIsLoading(false);
+                            Alert.alert("Error", result.error);
                         }
                     }
                 }
@@ -73,6 +83,30 @@ const UserManagementScreen = () => {
         setIsLoading(false);
     };
 
+    const handleEditUser = (user) => {
+        setEditingUser(user);
+        setEditRole(user.role || 'user');
+        setEditStatus(user.status || 'approved');
+        setIsEditModalVisible(true);
+    };
+
+    const handleUpdateUser = async () => {
+        if (!editingUser) return;
+        setIsLoading(true);
+        const result = await updateUserDetails(editingUser.id, {
+            role: editRole,
+            status: editStatus,
+        });
+        if (result.success) {
+            setIsEditModalVisible(false);
+            setEditingUser(null);
+            fetchUsers();
+        } else {
+            Alert.alert("Error", result.error);
+        }
+        setIsLoading(false);
+    };
+
     const renderUser = ({ item }) => (
         <View style={styles.userCard}>
             <TouchableOpacity
@@ -87,28 +121,39 @@ const UserManagementScreen = () => {
                     </View>
                 </View>
             </TouchableOpacity>
-            {item.status === 'pending' && (
-                <View style={styles.approvalActions}>
+
+            <View style={styles.cardActions}>
+                {item.status === 'pending' && (
+                    <View style={styles.approvalActions}>
+                        <TouchableOpacity
+                            onPress={() => handleUpdateStatus(item.id, 'approved')}
+                            style={[styles.actionBtn, styles.approveBtn]}
+                        >
+                            <Text style={styles.actionBtnText}>✓</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            onPress={() => handleUpdateStatus(item.id, 'rejected')}
+                            style={[styles.actionBtn, styles.rejectBtn]}
+                        >
+                            <Text style={styles.actionBtnText}>✗</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+                <View style={styles.mainActions}>
                     <TouchableOpacity
-                        onPress={() => handleUpdateStatus(item.id, 'approved')}
-                        style={[styles.actionBtn, styles.approveBtn]}
+                        onPress={() => handleEditUser(item)}
+                        style={styles.editButton}
                     >
-                        <Text style={styles.actionBtnText}>✓</Text>
+                        <Text style={styles.editIcon}>✏️</Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        onPress={() => handleUpdateStatus(item.id, 'rejected')}
-                        style={[styles.actionBtn, styles.rejectBtn]}
+                        onPress={() => handleDeleteUser(item.id, item.email)}
+                        style={styles.deleteButton}
                     >
-                        <Text style={styles.actionBtnText}>✗</Text>
+                        <Text style={styles.deleteIcon}>🗑️</Text>
                     </TouchableOpacity>
                 </View>
-            )}
-            <TouchableOpacity
-                onPress={() => handleDeleteUser(item.id, item.email)}
-                style={styles.deleteButton}
-            >
-                <Text style={styles.deleteIcon}>🗑️</Text>
-            </TouchableOpacity>
+            </View>
         </View>
     );
 
@@ -134,6 +179,7 @@ const UserManagementScreen = () => {
                 ListEmptyComponent={<Text style={styles.emptyText}>No users found.</Text>}
             />
 
+            {/* Create User Modal */}
             <Modal
                 visible={isModalVisible}
                 animationType="slide"
@@ -170,12 +216,63 @@ const UserManagementScreen = () => {
                             <Button
                                 title="Cancel"
                                 onPress={() => setIsModalVisible(false)}
-                                style={styles.cancelBtn}
-                                textStyle={{ color: '#5a6278' }}
+                                variant="secondary"
+                                fullWidth={false}
+                                style={styles.modalBtn}
                             />
                             <Button
                                 title="Create"
                                 onPress={handleCreateUser}
+                                fullWidth={false}
+                                style={styles.modalBtn}
+                                loading={isLoading}
+                            />
+                        </View>
+                    </View>
+                </View>
+            </Modal>
+
+            {/* Edit User Modal */}
+            <Modal
+                visible={isEditModalVisible}
+                animationType="slide"
+                transparent={true}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>Edit User: {editingUser?.email}</Text>
+                        <Dropdown
+                            label="Account Type"
+                            value={editRole}
+                            options={[
+                                { label: 'User', value: 'user' },
+                                { label: 'Admin', value: 'admin' },
+                            ]}
+                            onSelect={setEditRole}
+                        />
+                        <Dropdown
+                            label="Status"
+                            value={editStatus}
+                            options={[
+                                { label: 'Approved', value: 'approved' },
+                                { label: 'Pending', value: 'pending' },
+                                { label: 'Rejected', value: 'rejected' },
+                            ]}
+                            onSelect={setEditStatus}
+                        />
+                        <View style={styles.modalButtons}>
+                            <Button
+                                title="Cancel"
+                                onPress={() => setIsEditModalVisible(false)}
+                                variant="secondary"
+                                fullWidth={false}
+                                style={styles.modalBtn}
+                            />
+                            <Button
+                                title="Update"
+                                onPress={handleUpdateUser}
+                                fullWidth={false}
+                                style={styles.modalBtn}
                                 loading={isLoading}
                             />
                         </View>
@@ -239,15 +336,6 @@ const styles = StyleSheet.create({
         color: '#7c85a0',
         marginTop: 2,
     },
-    deleteButton: {
-        padding: 8,
-        backgroundColor: '#fecaca',
-        borderRadius: 8,
-        marginLeft: 10,
-    },
-    deleteIcon: {
-        fontSize: 16,
-    },
     roleContainer: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -273,17 +361,28 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         textTransform: 'uppercase',
     },
+    cardActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
     approvalActions: {
         flexDirection: 'row',
-        marginRight: 10,
+        borderRightWidth: 1,
+        borderRightColor: '#eceff8',
+        paddingRight: 8,
+        marginRight: 8,
+    },
+    mainActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     actionBtn: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
+        width: 28,
+        height: 28,
+        borderRadius: 14,
         alignItems: 'center',
         justifyContent: 'center',
-        marginLeft: 8,
+        marginLeft: 6,
     },
     approveBtn: {
         backgroundColor: '#d1fae5',
@@ -293,6 +392,24 @@ const styles = StyleSheet.create({
     },
     actionBtnText: {
         fontWeight: 'bold',
+        fontSize: 14,
+    },
+    editButton: {
+        padding: 8,
+        backgroundColor: '#e0f2fe',
+        borderRadius: 8,
+        marginLeft: 4,
+    },
+    editIcon: {
+        fontSize: 16,
+    },
+    deleteButton: {
+        padding: 8,
+        backgroundColor: '#fecaca',
+        borderRadius: 8,
+        marginLeft: 8,
+    },
+    deleteIcon: {
         fontSize: 16,
     },
     emptyText: {
@@ -320,11 +437,10 @@ const styles = StyleSheet.create({
     },
     modalButtons: {
         flexDirection: 'row',
-        gap: 10,
-        marginTop: 10,
+        gap: 12,
+        marginTop: 20,
     },
-    cancelBtn: {
-        backgroundColor: '#eceff8',
+    modalBtn: {
         flex: 1,
     },
 });

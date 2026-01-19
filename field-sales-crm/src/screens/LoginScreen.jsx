@@ -64,13 +64,15 @@ const LoginScreen = () => {
     >
       <SafeAreaView style={styles.container}>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          behavior={Platform.OS === 'ios' ? 'padding' : Platform.OS === 'android' ? 'height' : undefined}
           style={styles.flex}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
+            bounces={false}
           >
             <View style={styles.content}>
               {/* Header */}
@@ -181,21 +183,27 @@ const LoginScreen = () => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
+    width: '100%',
+    height: '100%',
   },
   container: {
     flex: 1,
+    backgroundColor: 'transparent',
   },
   flex: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingVertical: 20,
+    justifyContent: 'center',
+    paddingVertical: 60, // Extra padding to allow space for dropdowns at the bottom
   },
   content: {
-    flex: 1,
     paddingHorizontal: 24,
-    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 500,
+    alignSelf: 'center',
+    overflow: 'visible', // Critical for absolute dropdowns
   },
   header: {
     alignItems: 'center',
@@ -249,6 +257,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.5)',
+    zIndex: 10,
+    overflow: 'visible',
     ...Platform.select({
       ios: {
         shadowColor: '#000',
@@ -266,26 +276,30 @@ const styles = StyleSheet.create({
     }),
   },
   errorBox: {
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fecaca',
-    borderRadius: 12,
-    padding: 16,
+    backgroundColor: '#fff1f2',
+    borderLeftWidth: 4,
+    borderLeftColor: '#f43f5e',
+    borderRadius: 8,
+    padding: 12,
     marginBottom: 16,
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  errorIcon: {
-    fontSize: 18,
-    marginRight: 10,
-  },
-  errorText: {
-    color: '#dc2626',
-    flex: 1,
-    fontSize: 14,
+    zIndex: 1,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#f43f5e',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      android: {
+        elevation: 2,
+      },
+    }),
   },
   form: {
     marginBottom: 24,
+    zIndex: 50, // Higher zIndex for form inputs
   },
   toggleContainer: {
     flexDirection: 'row',

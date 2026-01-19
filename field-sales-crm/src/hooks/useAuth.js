@@ -27,8 +27,8 @@ export const useAuth = () => {
 
   // Register handler
   const register = useCallback(
-    async (email, password) => {
-      const result = await dispatch(registerUser({ email, password }));
+    async (email, password, role = 'user') => {
+      const result = await dispatch(registerUser({ email, password, role }));
       return !result.error;
     },
     [dispatch]

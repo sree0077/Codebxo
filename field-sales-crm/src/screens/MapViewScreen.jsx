@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useSelector } from 'react-redux';
 import MapView from '../components/maps/MapView';
 import ClientMarker from '../components/maps/ClientMarker';
 import RoutePolyline from '../components/maps/RoutePolyline';
@@ -9,16 +10,37 @@ import { Button, LoadingSpinner } from '../components/common';
 import { useClients } from '../hooks/useClients';
 import { useLocation } from '../hooks/useLocation';
 import { useRouteOptimization } from '../hooks/useRouteOptimization';
+import { getAllUsers } from '../services/firebase';
 import { getRegionFromCoordinates, formatDistance, formatDuration, decodePolyline } from '../services/mapsService';
 import { SCREENS } from '../utils/constants';
 
 const MapViewScreen = () => {
   const navigation = useNavigation();
   const mapRef = useRef(null);
-  
-  const { filteredClients } = useClients();
+
+  const { filteredClients, loadAllClients } = useClients();
+  const { user } = useSelector(state => state.auth);
   const { location: currentLocation, getCurrentLocation } = useLocation();
   const { route, isCalculating, optimizeRoute, clearRoute } = useRouteOptimization();
+  const [usersMap, setUsersMap] = useState({});
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      loadAllClients();
+      fetchUsers();
+    }
+  }, [user, loadAllClients]);
+
+  const fetchUsers = async () => {
+    const result = await getAllUsers();
+    if (result.success) {
+      const map = {};
+      result.users.forEach(u => {
+        map[u.id] = u.email;
+      });
+      setUsersMap(map);
+    }
+  };
 
   const [selectedClients, setSelectedClients] = useState([]);
   const [mapRegion, setMapRegion] = useState(null);
@@ -89,7 +111,7 @@ const MapViewScreen = () => {
     }
 
     const optimizedRoute = await optimizeRoute(selectedClients, currentLocation);
-    
+
     if (optimizedRoute) {
       // Fit map to show entire route
       const coordinates = optimizedRoute.clients.map(c => c.location);
@@ -125,6 +147,19 @@ const MapViewScreen = () => {
     }
   }, [getCurrentLocation]);
 
+  if (!mapRegion && clientsWithLocation.length === 0 && !currentLocation) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyIcon}>📍</Text>
+          <Text style={styles.emptyTitle}>No locations available</Text>
+          <Text style={styles.emptyText}>Add clients with locations to see them on the map.</Text>
+          <Button title="Go Back" onPress={() => navigation.goBack()} variant="outline" />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (!mapRegion) {
     return <LoadingSpinner fullScreen message="Loading map..." />;
   }
@@ -140,20 +175,16 @@ const MapViewScreen = () => {
           style={styles.map}
         >
           {/* Client Markers */}
-          {clientsWithLocation.map((client, index) => {
-            const isSelected = selectedClients.some(c => c.id === client.id);
-            const routeIndex = route?.clients.findIndex(c => c.id === client.id);
-
-            return (
-              <ClientMarker
-                key={client.id}
-                client={client}
-                onPress={handleMarkerPress}
-                isSelected={isSelected}
-                index={route && routeIndex !== -1 ? routeIndex : undefined}
-              />
-            );
-          })}
+          {clientsWithLocation.map((client, idx) => (
+            <ClientMarker
+              key={client.id}
+              client={client}
+              creatorEmailOverride={usersMap[client.userId]}
+              isSelected={selectedClients.some(c => c.id === client.id)}
+              index={isCalculating ? idx : undefined}
+              onPress={handleMarkerPress}
+            />
+          ))}
 
           {/* Route Polyline */}
           {route && (route.polyline || route.coordinates) && (
@@ -197,7 +228,7 @@ const MapViewScreen = () => {
             <Text style={styles.panelTitle}>
               Select Clients ({selectedClients.length} selected)
             </Text>
-            
+
             {route && (
               <View style={styles.routeInfo}>
                 <Text style={styles.routeInfoText}>
@@ -297,6 +328,28 @@ const styles = StyleSheet.create({
   routeActions: {
     flexDirection: 'row',
     gap: 12,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1e293b',
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
+    marginBottom: 24,
   },
 });
 

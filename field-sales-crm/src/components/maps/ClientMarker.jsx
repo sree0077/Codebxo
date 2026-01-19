@@ -57,7 +57,7 @@ if (Platform.OS === 'web') {
  * Custom marker component for displaying client locations
  * Shows client info and quick actions (call/message)
  */
-const ClientMarker = ({ client, onPress, isSelected = false, index }) => {
+const ClientMarker = ({ client, onPress, isSelected = false, index, creatorEmailOverride }) => {
   const [showCallout, setShowCallout] = useState(false);
 
   if (!client?.location) {
@@ -131,6 +131,11 @@ const ClientMarker = ({ client, onPress, isSelected = false, index }) => {
                   {client.companyName}
                 </p>
               )}
+              {(client.creatorEmail || creatorEmailOverride) && (
+                <p style={{ margin: '4px 0', fontSize: '12px', color: '#7f68ea', fontStyle: 'italic' }}>
+                  👤 {client.creatorEmail || creatorEmailOverride}
+                </p>
+              )}
               {client.phoneNumber && (
                 <p style={{ margin: '4px 0', fontSize: '13px' }}>
                   📞 {client.phoneNumber}
@@ -196,7 +201,7 @@ const ClientMarker = ({ client, onPress, isSelected = false, index }) => {
           <Text style={styles.markerText}>{index + 1}</Text>
         </View>
       )}
-      
+
       {showCallout && (
         <View style={styles.callout}>
           <View style={styles.calloutContent}>
@@ -204,13 +209,16 @@ const ClientMarker = ({ client, onPress, isSelected = false, index }) => {
             {client.companyName && (
               <Text style={styles.companyName}>{client.companyName}</Text>
             )}
+            {(client.creatorEmail || creatorEmailOverride) && (
+              <Text style={styles.creatorEmail}>👤 {client.creatorEmail || creatorEmailOverride}</Text>
+            )}
             {client.phoneNumber && (
               <Text style={styles.phone}>📞 {client.phoneNumber}</Text>
             )}
             {client.address && (
               <Text style={styles.address}>📍 {client.address}</Text>
             )}
-            
+
             <View style={styles.actions}>
               <TouchableOpacity onPress={handleCall} style={styles.actionButton}>
                 <Text style={styles.actionText}>📞 Call</Text>
@@ -280,6 +288,11 @@ const styles = StyleSheet.create({
   address: {
     fontSize: 12,
     color: '#64748b',
+  },
+  creatorEmail: {
+    fontSize: 12,
+    color: '#7f68ea',
+    fontStyle: 'italic',
   },
   actions: {
     flexDirection: 'row',

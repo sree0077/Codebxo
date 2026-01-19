@@ -20,8 +20,6 @@ import {
   query,
   where,
   orderBy,
-  where,
-  orderBy,
   getDoc,
   serverTimestamp
 } from 'firebase/firestore';
@@ -124,21 +122,21 @@ export const loginUser = async (email, password) => {
   }
 };
 
-export const registerUser = async (email, password) => {
+export const registerUser = async (email, password, role = 'user') => {
   try {
-    console.log('[FIREBASE] 📝 Attempting registration for:', email);
+    console.log('[FIREBASE] 📝 Attempting registration for:', email, 'Role:', role);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
     // Create user document in Firestore
     await setDoc(doc(db, COLLECTIONS.USERS, user.uid), {
       email: user.email,
-      role: 'user',
+      role: role,
       createdAt: serverTimestamp(),
     });
 
     console.log('[FIREBASE] ✅ Registration successful');
-    return { success: true, user: { uid: user.uid, email: user.email, role: 'user' } };
+    return { success: true, user: { uid: user.uid, email: user.email, role: role } };
   } catch (error) {
     console.error('[FIREBASE] ❌ Registration error:', error.code, error.message);
     return { success: false, error: error.message };
@@ -146,6 +144,18 @@ export const registerUser = async (email, password) => {
 };
 
 // Admin Functions
+export const getUserData = async (userId) => {
+  try {
+    const userDoc = await getDoc(doc(db, COLLECTIONS.USERS, userId));
+    if (userDoc.exists()) {
+      return { success: true, userData: userDoc.data() };
+    }
+    return { success: false, error: 'User document not found' };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+};
+
 export const getAllUsers = async () => {
   try {
     const snapshot = await getDocs(collection(db, COLLECTIONS.USERS));
@@ -269,6 +279,32 @@ export const getClientsByUser = async (userId) => {
     }
     console.error('[FIREBASE] ❌ Error fetching clients:', error.message);
     return { success: false, error: error.message, clients: [] };
+  }
+};
+
+export const getAllClients = async () => {
+  try {
+    console.log('[FIREBASE] 📥 Fetching ALL clients (Admin View)');
+    const q = query(
+      collection(db, COLLECTIONS.CLIENTS),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    const clients = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    console.log('[FIREBASE] ✅ Fetched', clients.length, 'total clients');
+    return { success: true, clients };
+  } catch (error) {
+    console.error('[FIREBASE] ❌ Error fetching all clients:', error.message);
+    return { success: false, error: error.message, clients: [] };
+  }
+};
+
+export const getClientCount = async () => {
+  try {
+    const snapshot = await getDocs(collection(db, COLLECTIONS.CLIENTS));
+    return { success: true, count: snapshot.size };
+  } catch (error) {
+    return { success: false, error: error.message, count: 0 };
   }
 };
 

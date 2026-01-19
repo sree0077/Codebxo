@@ -80,5 +80,7 @@ export const SCREENS = {
   MAP_VIEW: 'MapView',
   ADMIN_DASHBOARD: 'AdminDashboard',
   USER_MANAGEMENT: 'UserManagement',
+  ADMIN_CLIENT_LIST: 'AdminClientList',
+  ADMIN_CLIENT_DETAIL: 'AdminClientDetail',
 };
 

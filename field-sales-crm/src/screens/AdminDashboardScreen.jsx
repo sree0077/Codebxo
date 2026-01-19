@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../hooks/useAuth';
 import { SCREENS } from '../utils/constants';
-import { getAllUsers } from '../services/firebase';
+import { getAllUsers, getClientCount } from '../services/firebase';
 
 const AdminDashboardScreen = () => {
     const navigation = useNavigation();
@@ -15,13 +15,15 @@ const AdminDashboardScreen = () => {
     const fetchStats = async () => {
         setIsLoading(true);
         try {
-            const usersResult = await getAllUsers();
-            if (usersResult.success) {
-                setStats({
-                    totalUsers: usersResult.users.length,
-                    totalClients: '...', // Would require a separate global client count call
-                });
-            }
+            const [usersResult, clientsResult] = await Promise.all([
+                getAllUsers(),
+                getClientCount()
+            ]);
+
+            setStats({
+                totalUsers: usersResult.success ? usersResult.users.length : 0,
+                totalClients: clientsResult.success ? clientsResult.count : 0,
+            });
         } catch (error) {
             console.error('Error fetching admin stats:', error);
         } finally {
@@ -38,7 +40,11 @@ const AdminDashboardScreen = () => {
     };
 
     const handleViewAllData = () => {
-        navigation.navigate(SCREENS.CLIENT_LIST);
+        navigation.navigate(SCREENS.ADMIN_CLIENT_LIST);
+    };
+
+    const handleViewMap = () => {
+        navigation.navigate(SCREENS.MAP_VIEW);
     };
 
     return (
@@ -53,7 +59,7 @@ const AdminDashboardScreen = () => {
                 <View style={styles.header}>
                     <View>
                         <Text style={styles.title}>Admin Panel</Text>
-                        <Text style={styles.subtitle}>Welcome, {user?.displayName}</Text>
+                        <Text style={styles.subtitle}>Welcome, {user?.displayName || 'Admin'}</Text>
                     </View>
                     <TouchableOpacity onPress={logout} style={styles.logoutButton}>
                         <Text style={styles.logoutText}>Logout</Text>
@@ -67,8 +73,8 @@ const AdminDashboardScreen = () => {
                         <Text style={styles.statValue}>{stats.totalUsers}</Text>
                     </View>
                     <View style={[styles.statCard, { backgroundColor: '#3f4555' }]}>
-                        <Text style={styles.statLabel}>System Health</Text>
-                        <Text style={styles.statValue}>Optimal</Text>
+                        <Text style={styles.statLabel}>Total Clients</Text>
+                        <Text style={styles.statValue}>{stats.totalClients}</Text>
                     </View>
                 </View>
 
@@ -91,6 +97,16 @@ const AdminDashboardScreen = () => {
                     <View>
                         <Text style={styles.actionTitle}>Global Client Data</Text>
                         <Text style={styles.actionSubtitle}>View and manage all client records</Text>
+                    </View>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.actionButton} onPress={handleViewMap}>
+                    <View style={styles.actionIconContainer}>
+                        <Text style={styles.actionIcon}>🗺️</Text>
+                    </View>
+                    <View>
+                        <Text style={styles.actionTitle}>Global Map View</Text>
+                        <Text style={styles.actionSubtitle}>See all clients on an interactive map</Text>
                     </View>
                 </TouchableOpacity>
 
@@ -129,15 +145,16 @@ const styles = StyleSheet.create({
         color: '#7c85a0',
     },
     logoutButton: {
-        padding: 10,
         backgroundColor: '#ffffff',
-        borderRadius: 8,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
         borderWidth: 1,
-        borderColor: '#d4d9e8',
+        borderColor: '#eceff8',
     },
     logoutText: {
-        color: '#ef4444',
-        fontWeight: '600',
+        color: '#5a6278',
+        fontWeight: 'normal',
     },
     statsGrid: {
         flexDirection: 'row',

@@ -3,7 +3,8 @@ import {
   loginUser as firebaseLogin,
   registerUser as firebaseRegister,
   logoutUser as firebaseLogout,
-  onAuthChange
+  onAuthChange,
+  getUserData
 } from '../../services/firebase';
 
 // Initial state - start with isLoading: false to show login immediately
@@ -28,14 +29,15 @@ export const loadUser = createAsyncThunk('auth/loadUser', async () => {
 
     if (user) {
       console.log('User loaded from Firebase:', user.email);
-      // We need to fetch the role from Firestore
-      const result = await firebaseLogin(user.email, ''); // This is hacky, but let's assume we can get it from onAuthChange or a separate call
-      // BETTER: Update the firebase.js to return user with role in a dedicated getter or just fetch here
+      // Fetch user role from Firestore
+      const result = await getUserData(user.uid);
+      const role = result.success ? result.userData.role : 'user';
+
       return {
         id: user.uid,
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0],
-        role: 'user', // Default for now, logout/login will refresh correctly
+        role: role,
       };
     }
     console.log('No user found in Firebase auth state');
@@ -74,10 +76,10 @@ export const loginUser = createAsyncThunk(
 // Async thunk for registration with Firebase
 export const registerUser = createAsyncThunk(
   'auth/registerUser',
-  async ({ email, password }, { rejectWithValue }) => {
+  async ({ email, password, role = 'user' }, { rejectWithValue }) => {
     try {
-      console.log('[AUTH] 📝 Registration attempt for:', email);
-      const result = await firebaseRegister(email, password);
+      console.log('[AUTH] 📝 Registration attempt for:', email, 'Role:', role);
+      const result = await firebaseRegister(email, password, role);
       if (result.success) {
         console.log('[AUTH] ✅ Registration successful:', result.user.email);
         return {

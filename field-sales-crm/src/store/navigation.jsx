@@ -16,6 +16,8 @@ import {
   MapViewScreen,
   AdminDashboardScreen,
   UserManagementScreen,
+  AdminClientListScreen,
+  AdminClientDetailScreen,
 } from '../screens';
 
 const Stack = createNativeStackNavigator();
@@ -91,14 +93,19 @@ const AdminStack = () => (
       options={{ title: 'User Management' }}
     />
     <Stack.Screen
-      name={SCREENS.CLIENT_LIST}
-      component={ClientListScreen}
-      options={{ title: 'All Clients' }}
+      name={SCREENS.ADMIN_CLIENT_LIST}
+      component={AdminClientListScreen}
+      options={{ title: 'Global Client Data' }}
     />
     <Stack.Screen
-      name={SCREENS.CLIENT_DETAIL}
-      component={ClientDetailScreen}
-      options={{ title: 'Client Details' }}
+      name={SCREENS.ADMIN_CLIENT_DETAIL}
+      component={AdminClientDetailScreen}
+      options={{ title: 'Client Details (Admin)' }}
+    />
+    <Stack.Screen
+      name={SCREENS.MAP_VIEW}
+      component={MapViewScreen}
+      options={{ title: 'Global Map' }}
     />
   </Stack.Navigator>
 );
@@ -113,7 +120,7 @@ const LoadingScreen = () => (
 
 const Navigation = () => {
   const dispatch = useDispatch();
-  const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
+  const { user, isAuthenticated, isLoading } = useSelector((state) => state.auth);
 
   // Initialize sync service
   const { isOnline, isSyncing } = useSync();

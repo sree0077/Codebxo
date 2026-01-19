@@ -4,7 +4,7 @@ import Card from '../common/Card';
 import { getInitials, getPotentialColor, makePhoneCall, sendSMS, getBusinessTypeIcon } from '../../utils/helpers';
 import { BUSINESS_TYPES } from '../../utils/constants';
 
-const ClientCard = ({ client, onPress, onCall, onMessage }) => {
+const ClientCard = ({ client, onPress, onCall, onMessage, creatorEmailOverride }) => {
   const businessType = BUSINESS_TYPES.find((b) => b.value === client.businessType);
   const potentialColor = getPotentialColor(client.customerPotential);
   const businessIcon = getBusinessTypeIcon(client.businessType);
@@ -45,6 +45,7 @@ const ClientCard = ({ client, onPress, onCall, onMessage }) => {
               {client.companyName}
             </Text>
           )}
+
           <View style={styles.metaRow}>
             <Text style={styles.businessType}>{businessIcon} {businessType?.label || 'N/A'}</Text>
             {client.customerPotential && (
@@ -140,6 +141,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     textTransform: 'capitalize',
+  },
+  creatorEmail: {
+    fontSize: 11,
+    color: '#7f68ea',
+    marginTop: 2,
+    fontStyle: 'italic',
   },
   actionButtons: {
     flexDirection: 'row',

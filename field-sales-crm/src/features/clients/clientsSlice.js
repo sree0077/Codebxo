@@ -3,7 +3,8 @@ import {
   addClient as firebaseAddClient,
   updateClient as firebaseUpdateClient,
   deleteClient as firebaseDeleteClient,
-  getClientsByUser
+  getClientsByUser,
+  getAllClients
 } from '../../services/firebase';
 import {
   saveClients,
@@ -56,10 +57,35 @@ export const loadClients = createAsyncThunk(
   }
 );
 
+// Load ALL clients for admin from Firestore
+export const loadAllClients = createAsyncThunk(
+  'clients/loadAllClients',
+  async (_, { rejectWithValue }) => {
+    try {
+      console.log('[CLIENTS] 📥 Loading ALL clients for admin');
+      if (isOnline()) {
+        const result = await getAllClients();
+        if (result.success) {
+          const clients = result.clients.map(client => ({
+            ...client,
+            createdAt: client.createdAt?.toDate?.()?.toISOString() || client.createdAt,
+            updatedAt: client.updatedAt?.toDate?.()?.toISOString() || client.updatedAt,
+          }));
+          return clients;
+        }
+      }
+      return [];
+    } catch (error) {
+      console.error('[CLIENTS] ❌ Error loading all clients:', error.message);
+      return [];
+    }
+  }
+);
+
 // Add new client to Firestore (with offline support)
 export const addClient = createAsyncThunk(
   'clients/addClient',
-  async ({ userId, clientData }, { rejectWithValue, getState }) => {
+  async ({ userId, userEmail, clientData }, { rejectWithValue, getState }) => {
     try {
       console.log('[CLIENTS] ➕ Adding new client:', clientData.clientName);
       const tempId = `temp_${Date.now()}`;
@@ -67,6 +93,7 @@ export const addClient = createAsyncThunk(
         ...clientData,
         id: tempId,
         userId,
+        creatorEmail: userEmail, // Add creator info
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         _offline: !isOnline(), // Mark as offline if created offline
@@ -76,6 +103,7 @@ export const addClient = createAsyncThunk(
         const result = await firebaseAddClient({
           ...clientData,
           userId,
+          creatorEmail: userEmail, // Add creator info
         });
         if (result.success) {
           newClient.id = result.id;
@@ -84,7 +112,7 @@ export const addClient = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('ADD_CLIENT', { ...clientData, userId }, () => { });
+        await executeOrQueue(userId, 'ADD_CLIENT', { ...clientData, userId }, () => { });
         console.log('[CLIENTS] 📴 Client queued for sync');
       }
 
@@ -119,7 +147,7 @@ export const updateClient = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('UPDATE_CLIENT', { id: clientId, ...clientData }, () => { });
+        await executeOrQueue(userId, 'UPDATE_CLIENT', { id: clientId, ...clientData }, () => { });
         console.log('[CLIENTS] 📴 Client update queued for sync');
       }
 
@@ -149,7 +177,7 @@ export const deleteClient = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('DELETE_CLIENT', { id: clientId }, () => { });
+        await executeOrQueue(userId, 'DELETE_CLIENT', { id: clientId }, () => { });
         console.log('[CLIENTS] 📴 Client deletion queued for sync');
       }
 
@@ -249,6 +277,18 @@ const clientsSlice = createSlice({
       // Delete Client
       .addCase(deleteClient.fulfilled, (state, action) => {
         state.items = state.items.filter((c) => c.id !== action.payload);
+      })
+      // Load All Clients (Admin)
+      .addCase(loadAllClients.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(loadAllClients.fulfilled, (state, action) => {
+        state.items = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(loadAllClients.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
       });
   },
 });

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { getAllUsers, deleteUserAccount, registerUser } from '../services/firebase';
-import { Button, Input, LoadingSpinner } from '../components/common';
+import { Button, Input, LoadingSpinner, Dropdown } from '../components/common';
 
 const UserManagementScreen = () => {
     const [users, setUsers] = useState([]);
@@ -12,6 +12,7 @@ const UserManagementScreen = () => {
     // Form state
     const [newEmail, setNewEmail] = useState('');
     const [newPassword, setNewPassword] = useState('');
+    const [newRole, setNewRole] = useState('user');
 
     const fetchUsers = async () => {
         setIsLoading(true);
@@ -49,7 +50,7 @@ const UserManagementScreen = () => {
     const handleCreateUser = async () => {
         if (!newEmail || !newPassword) return;
         setIsLoading(true);
-        const result = await registerUser(newEmail, newPassword);
+        const result = await registerUser(newEmail, newPassword, newRole);
         if (result.success) {
             setIsModalVisible(false);
             setNewEmail('');
@@ -63,10 +64,13 @@ const UserManagementScreen = () => {
 
     const renderUser = ({ item }) => (
         <View style={styles.userCard}>
-            <View>
+            <TouchableOpacity
+                style={styles.userInfo}
+                onPress={() => Alert.alert("User Details", `Email: ${item.email}\nRole: ${item.role || 'user'}`)}
+            >
                 <Text style={styles.userEmail}>{item.email}</Text>
                 <Text style={styles.userRole}>Role: {item.role || 'user'}</Text>
-            </View>
+            </TouchableOpacity>
             <TouchableOpacity
                 onPress={() => handleDeleteUser(item.id, item.email)}
                 style={styles.deleteButton}
@@ -121,6 +125,15 @@ const UserManagementScreen = () => {
                             placeholder="Minimum 6 characters"
                             secureTextEntry={true}
                         />
+                        <Dropdown
+                            label="Account Type"
+                            value={newRole}
+                            options={[
+                                { label: 'User', value: 'user' },
+                                { label: 'Admin', value: 'admin' },
+                            ]}
+                            onSelect={setNewRole}
+                        />
                         <View style={styles.modalButtons}>
                             <Button
                                 title="Cancel"
@@ -161,11 +174,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#7f68ea',
         paddingVertical: 8,
         paddingHorizontal: 16,
-        borderRadius: 8,
+        borderRadius: 20,
     },
     addButtonText: {
         color: '#ffffff',
-        fontWeight: 'bold',
+        fontWeight: '600',
     },
     listContent: {
         padding: 20,
@@ -186,6 +199,9 @@ const styles = StyleSheet.create({
         fontWeight: '600',
         color: '#2a2e3a',
     },
+    userInfo: {
+        flex: 1,
+    },
     userRole: {
         fontSize: 12,
         color: '#7c85a0',
@@ -193,9 +209,11 @@ const styles = StyleSheet.create({
     },
     deleteButton: {
         padding: 8,
+        backgroundColor: '#fecaca',
+        borderRadius: 8,
     },
     deleteIcon: {
-        fontSize: 20,
+        fontSize: 16,
     },
     emptyText: {
         textAlign: 'center',

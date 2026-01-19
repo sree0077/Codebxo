@@ -7,4 +7,6 @@ export { default as AddInteractionScreen } from './AddInteractionScreen';
 export { default as MapViewScreen } from './MapViewScreen';
 export { default as AdminDashboardScreen } from './AdminDashboardScreen';
 export { default as UserManagementScreen } from './UserManagementScreen';
+export { default as AdminClientListScreen } from './AdminClientListScreen';
+export { default as AdminClientDetailScreen } from './AdminClientDetailScreen';
 

@@ -75,7 +75,7 @@ export const addInteraction = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('ADD_INTERACTION', { ...interactionData, userId }, () => { });
+        await executeOrQueue(userId, 'ADD_INTERACTION', { ...interactionData, userId }, () => { });
         console.log('[INTERACTIONS] 📴 Interaction queued for sync');
       }
 
@@ -103,7 +103,7 @@ export const updateInteraction = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('UPDATE_INTERACTION', { id: interactionId, ...interactionData }, () => { });
+        await executeOrQueue(userId, 'UPDATE_INTERACTION', { id: interactionId, ...interactionData }, () => { });
         console.log('[INTERACTIONS] 📴 Interaction update queued for sync');
       }
 
@@ -133,7 +133,7 @@ export const deleteInteraction = createAsyncThunk(
         }
       } else {
         // Queue for sync when online
-        await executeOrQueue('DELETE_INTERACTION', { id: interactionId }, () => { });
+        await executeOrQueue(userId, 'DELETE_INTERACTION', { id: interactionId }, () => { });
         console.log('[INTERACTIONS] 📴 Interaction deletion queued for sync');
       }
 

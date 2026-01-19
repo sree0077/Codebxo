@@ -1,5 +1,6 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { View, Text, FlatList, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
+import { useDispatch } from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { SearchBar, LoadingSpinner, EmptyState } from '../components/common';
@@ -10,6 +11,7 @@ import { SCREENS } from '../utils/constants';
 
 const ClientListScreen = () => {
   const navigation = useNavigation();
+  const dispatch = useDispatch();
   const { user, logout } = useAuth();
   const {
     filteredClients,
@@ -18,7 +20,14 @@ const ClientListScreen = () => {
     updateSearchQuery,
     refreshClients,
     selectClient,
+    loadAllClients,
   } = useClients();
+
+  useEffect(() => {
+    if (user?.role === 'admin') {
+      loadAllClients();
+    }
+  }, [user, loadAllClients]);
 
   const handleClientPress = useCallback((client) => {
     selectClient(client);
@@ -106,14 +115,16 @@ const ClientListScreen = () => {
         />
       )}
 
-      {/* FAB - Add Client */}
-      <TouchableOpacity
-        onPress={handleAddClient}
-        style={styles.fab}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      {/* FAB - Add Client (Hidden for Admin) */}
+      {user?.role !== 'admin' && (
+        <TouchableOpacity
+          onPress={handleAddClient}
+          style={styles.fab}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.fabText}>+</Text>
+        </TouchableOpacity>
+      )}
     </SafeAreaView>
   );
 };

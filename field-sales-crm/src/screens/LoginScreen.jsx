@@ -11,7 +11,7 @@ import {
   Image
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Input, Button } from '../components/common';
+import { Input, Button, Dropdown } from '../components/common';
 import { useAuth } from '../hooks/useAuth';
 import { validateLoginForm } from '../utils/validators';
 
@@ -24,6 +24,7 @@ const LoginScreen = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [role, setRole] = useState('user');
   const [errors, setErrors] = useState({});
 
   const { login, register, isLoading, error, dismissError } = useAuth();
@@ -45,7 +46,7 @@ const LoginScreen = () => {
     if (isLogin) {
       await login(email, password);
     } else {
-      await register(email, password);
+      await register(email, password, role);
     }
   };
 
@@ -128,6 +129,18 @@ const LoginScreen = () => {
                       error={errors.confirmPassword}
                     />
                   )}
+
+                  {!isLogin && (
+                    <Dropdown
+                      label="Account Type"
+                      value={role}
+                      options={[
+                        { label: 'User', value: 'user' },
+                        { label: 'Admin', value: 'admin' },
+                      ]}
+                      onSelect={setRole}
+                    />
+                  )}
                 </View>
 
                 {/* Submit Button */}
@@ -154,7 +167,7 @@ const LoginScreen = () => {
               <View style={styles.demoBox}>
                 <Text style={styles.demoIcon}>💡</Text>
                 <Text style={styles.demoText}>
-                   Use email and password (6+ chars)
+                  Use email and password (6+ chars)
                 </Text>
               </View>
             </View>

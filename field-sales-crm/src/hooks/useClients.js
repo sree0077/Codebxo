@@ -7,6 +7,7 @@ import {
   deleteClient,
   setSelectedClient,
   setSearchQuery,
+  loadAllClients,
 } from '../features/clients/clientsSlice';
 
 export const useClients = () => {
@@ -37,10 +38,14 @@ export const useClients = () => {
   const createClient = useCallback(
     async (clientData) => {
       if (!user?.id) return { success: false, error: 'User not authenticated' };
-      const result = await dispatch(addClient({ userId: user.id, clientData }));
+      const result = await dispatch(addClient({
+        userId: user.id,
+        userEmail: user.email, // Pass email for attribution
+        clientData
+      }));
       return { success: !result.error, error: result.error?.message };
     },
-    [dispatch, user?.id]
+    [dispatch, user?.id, user?.email]
   );
 
   // Update existing client
@@ -107,6 +112,7 @@ export const useClients = () => {
     selectClient,
     updateSearchQuery,
     refreshClients,
+    loadAllClients: useCallback(() => dispatch(loadAllClients()), [dispatch]),
     getClientById,
   };
 };

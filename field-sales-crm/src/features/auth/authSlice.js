@@ -37,8 +37,8 @@ export const loadUser = createAsyncThunk('auth/loadUser', async () => {
         id: user.uid,
         email: user.email,
         displayName: user.displayName || user.email?.split('@')[0],
-        role: result.userData.role || 'user',
-        status: result.userData.status || 'approved', // Approved by default for legacy
+        role: result.userData?.role || 'user',
+        status: result.userData?.status || 'pending', // Default to pending if record missing or legacy
       };
     }
     console.log('No user found in Firebase auth state');

@@ -35,7 +35,7 @@ const UserManagementScreen = () => {
         } else {
             Alert.alert("Error", result.error);
         }
-        setIsLoading(true);
+        setIsLoading(false);
     };
 
     const handleDeleteUser = (userId, email) => {

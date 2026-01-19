@@ -110,6 +110,29 @@ const AdminStack = () => (
   </Stack.Navigator>
 );
 
+const RejectedAccessScreen = () => {
+  const dispatch = useDispatch();
+
+  return (
+    <View style={styles.approvalContainer}>
+      <Text style={styles.approvalIcon}>🚫</Text>
+      <Text style={styles.approvalTitle}>Access Denied</Text>
+      <Text style={styles.approvalText}>
+        Your account access has been rejected by the administrator.
+      </Text>
+      <Text style={styles.approvalSubtitle}>
+        If you believe this is a mistake, please contact support.
+      </Text>
+      <TouchableOpacity
+        style={styles.logoutLink}
+        onPress={() => dispatch(require('../features/auth/authSlice').logoutUser())}
+      >
+        <Text style={styles.logoutLinkText}>Go Back to Login</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
+
 const AwaitingApprovalScreen = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
@@ -170,6 +193,10 @@ const Navigation = () => {
       <NavigationContainer>
         {!isAuthenticated ? (
           <AuthStack />
+        ) : user?.status === 'rejected' ? (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="RejectedAccess" component={RejectedAccessScreen} />
+          </Stack.Navigator>
         ) : user?.status === 'pending' ? (
           <Stack.Navigator screenOptions={{ headerShown: false }}>
             <Stack.Screen name="AwaitingApproval" component={AwaitingApprovalScreen} />

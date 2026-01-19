@@ -14,6 +14,8 @@ import {
   EditClientScreen,
   AddInteractionScreen,
   MapViewScreen,
+  AdminDashboardScreen,
+  UserManagementScreen,
 } from '../screens';
 
 const Stack = createNativeStackNavigator();
@@ -25,7 +27,7 @@ const AuthStack = () => (
   </Stack.Navigator>
 );
 
-// Main Stack - for authenticated users
+// Main Stack - for authenticated regular users
 const MainStack = () => (
   <Stack.Navigator
     screenOptions={{
@@ -68,6 +70,39 @@ const MainStack = () => (
   </Stack.Navigator>
 );
 
+// Admin Stack - for authenticated administrators
+const AdminStack = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerStyle: { backgroundColor: '#7f68ea' },
+      headerTintColor: '#ffffff',
+      headerTitleStyle: { fontWeight: 'bold' },
+      headerBackTitleVisible: false,
+    }}
+  >
+    <Stack.Screen
+      name={SCREENS.ADMIN_DASHBOARD}
+      component={AdminDashboardScreen}
+      options={{ headerShown: false }}
+    />
+    <Stack.Screen
+      name={SCREENS.USER_MANAGEMENT}
+      component={UserManagementScreen}
+      options={{ title: 'User Management' }}
+    />
+    <Stack.Screen
+      name={SCREENS.CLIENT_LIST}
+      component={ClientListScreen}
+      options={{ title: 'All Clients' }}
+    />
+    <Stack.Screen
+      name={SCREENS.CLIENT_DETAIL}
+      component={ClientDetailScreen}
+      options={{ title: 'Client Details' }}
+    />
+  </Stack.Navigator>
+);
+
 // Simple loading component
 const LoadingScreen = () => (
   <View style={styles.loadingContainer}>
@@ -96,7 +131,13 @@ const Navigation = () => {
   return (
     <View style={styles.container}>
       <NavigationContainer>
-        {isAuthenticated ? <MainStack /> : <AuthStack />}
+        {!isAuthenticated ? (
+          <AuthStack />
+        ) : user?.role === 'admin' ? (
+          <AdminStack />
+        ) : (
+          <MainStack />
+        )}
       </NavigationContainer>
     </View>
   );

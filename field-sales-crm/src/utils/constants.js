@@ -78,5 +78,7 @@ export const SCREENS = {
   INTERACTIONS: 'Interactions',
   ADD_INTERACTION: 'AddInteraction',
   MAP_VIEW: 'MapView',
+  ADMIN_DASHBOARD: 'AdminDashboard',
+  USER_MANAGEMENT: 'UserManagement',
 };
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useSelector, useDispatch } from 'react-redux';
@@ -22,6 +22,32 @@ import {
 
 const Stack = createNativeStackNavigator();
 
+// Custom back button component for web platform
+// This fixes the issue where back button is invisible on web
+const CustomBackButton = (props) => {
+  if (Platform.OS === 'web') {
+    return (
+      <TouchableOpacity
+        onPress={props.onPress}
+        style={{
+          paddingLeft: 10,
+          paddingRight: 10,
+          paddingVertical: 8,
+          justifyContent: 'center',
+          alignItems: 'center',
+          minWidth: 44,
+          minHeight: 44,
+        }}
+      >
+        <Text style={{ fontSize: 28, color: '#ffffff', fontWeight: 'bold' }}>
+          ‹
+        </Text>
+      </TouchableOpacity>
+    );
+  }
+  return null;
+};
+
 // Auth Stack - for unauthenticated users
 const AuthStack = () => (
   <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -33,11 +59,24 @@ const AuthStack = () => (
 const MainStack = () => (
   <Stack.Navigator
     screenOptions={{
-      headerStyle: { backgroundColor: '#7f68ea' },
+      headerStyle: {
+        backgroundColor: '#7f68ea',
+        ...(Platform.OS === 'web' && {
+          elevation: 4,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3,
+        }),
+      },
       headerTintColor: '#ffffff',
       headerTitleStyle: { fontWeight: 'bold' },
       headerBackTitleVisible: false,
       headerBackVisible: true,
+      headerBackButtonMenuEnabled: true,
+      ...(Platform.OS === 'web' && {
+        headerLeft: (props) => <CustomBackButton {...props} />,
+      }),
     }}
   >
     <Stack.Screen
@@ -77,11 +116,24 @@ const MainStack = () => (
 const AdminStack = () => (
   <Stack.Navigator
     screenOptions={{
-      headerStyle: { backgroundColor: '#7f68ea' },
+      headerStyle: {
+        backgroundColor: '#7f68ea',
+        ...(Platform.OS === 'web' && {
+          elevation: 4,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3,
+        }),
+      },
       headerTintColor: '#ffffff',
       headerTitleStyle: { fontWeight: 'bold' },
       headerBackTitleVisible: false,
       headerBackVisible: true,
+      headerBackButtonMenuEnabled: true,
+      ...(Platform.OS === 'web' && {
+        headerLeft: (props) => <CustomBackButton {...props} />,
+      }),
     }}
   >
     <Stack.Screen

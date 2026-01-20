@@ -26,7 +26,6 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { mapAuthError } from '../utils/authErrors';
 
-// Firebase configuration from environment variables
 const firebaseConfig = {
   apiKey: process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -122,13 +121,22 @@ export const loginUser = async (email, password) => {
       userData = { ...userData, ...newDocData };
     }
 
-    // Admins are always approved
-    if (userData.role === 'admin') {
+    // Super Admin is always approved if they exist or are created
+    if (userData.email === SUPER_ADMIN_EMAIL) {
+      userData.role = 'admin';
       userData.status = 'approved';
+      if (!userDoc.exists()) {
+        await setDoc(userDocRef, {
+          email: user.email,
+          role: 'admin',
+          status: 'approved',
+          createdAt: serverTimestamp(),
+        });
+      }
     }
 
-    if (userData.status === 'rejected') {
-      return { success: false, error: 'Your account has been rejected by the administrator.' };
+    if (userData.status === 'rejected' || userData.status === 'deleted') {
+      return { success: false, error: 'Your account access has been restricted by the administrator.' };
     }
 
     console.log('[FIREBASE] ✅ Login successful, status:', userData.status);
@@ -145,20 +153,18 @@ export const registerUser = async (email, password, role = 'user', status = null
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
+    // SECURITY: All new registrations (even Admins) MUST start as pending
+    // UNLESS it's the specific Super Admin email
+    const finalStatus = email === SUPER_ADMIN_EMAIL ? 'approved' : 'pending';
+    const finalRole = email === SUPER_ADMIN_EMAIL ? 'admin' : role;
+
     // Create user document in Firestore
     const userData = {
       email: user.email,
-      role: role,
-      status: status || (role === 'admin' ? 'approved' : 'pending'),
+      role: finalRole,
+      status: finalStatus,
       createdAt: serverTimestamp(),
     };
-
-    // If an admin is creating a user, it should be approved by default
-    if (auth.currentUser && role !== 'admin') {
-      // Logic for admin creating a user could be different, 
-      // but for now we follow the 'status' passed or default logic.
-      // If we use this function in Admin panel, we might want to pass status='approved'
-    }
 
     await setDoc(doc(db, COLLECTIONS.USERS, user.uid), userData);
 
@@ -195,13 +201,36 @@ export const getAllUsers = async () => {
 
 export const deleteUserAccount = async (userId) => {
   try {
-    console.log('[FIREBASE] 🗑️ Deleting user record from Firestore:', userId);
-    await deleteDoc(doc(db, COLLECTIONS.USERS, userId));
-    // Note: Deleting Auth credentials requires Admin SDK/Cloud Functions
+    console.log('[FIREBASE] 🔒 Soft-deleting user record (setting as deleted):', userId);
+    const userRef = doc(db, COLLECTIONS.USERS, userId);
+
+    // 1. Mark user as deleted
+    await updateDoc(userRef, {
+      status: 'deleted',
+      deletedAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    // 2. Cascade delete associated clients
+    console.log('[FIREBASE] 🧹 Cascade deleting clients for user:', userId);
+    const clientsQuery = query(collection(db, COLLECTIONS.CLIENTS), where('userId', '==', userId));
+    const clientsSnapshot = await getDocs(clientsQuery);
+    const clientDeletions = clientsSnapshot.docs.map(clientDoc => deleteDoc(clientDoc.ref));
+    await Promise.all(clientDeletions);
+    console.log(`[FIREBASE] ✅ Deleted ${clientsSnapshot.size} clients`);
+
+    // 3. Cascade delete associated interactions
+    console.log('[FIREBASE] 🧹 Cascade deleting interactions for user:', userId);
+    const interactionsQuery = query(collection(db, COLLECTIONS.INTERACTIONS), where('userId', '==', userId));
+    const interactionsSnapshot = await getDocs(interactionsQuery);
+    const interactionDeletions = interactionsSnapshot.docs.map(intDoc => deleteDoc(intDoc.ref));
+    await Promise.all(interactionDeletions);
+    console.log(`[FIREBASE] ✅ Deleted ${interactionsSnapshot.size} interactions`);
+
     return { success: true };
   } catch (error) {
-    console.error('[FIREBASE] ❌ Error deleting user record:', error.message);
-    return { success: false, error: error.message };
+    console.error('[FIREBASE] ❌ Error in cascade deletion:', error.message);
+    return { success: false, error: 'Database cleanup partially failed: ' + error.message };
   }
 };
 
@@ -244,6 +273,9 @@ export const getCurrentUser = () => auth.currentUser;
 export const onAuthChange = (callback) => {
   return onAuthStateChanged(auth, callback);
 };
+
+// Super Admin Configuration
+export const SUPER_ADMIN_EMAIL = 'admin.codebxo@gmail.com';
 
 // Firestore Collections
 export const COLLECTIONS = {

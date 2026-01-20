@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Alert, Modal, TextInput, Platform } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { getAllUsers, deleteUserAccount, registerUser, updateUserStatus, updateUserDetails } from '../services/firebase';
+import { getAllUsers, deleteUserAccount, registerUser, updateUserStatus, updateUserDetails, auth, SUPER_ADMIN_EMAIL } from '../services/firebase';
 import { Button, Input, LoadingSpinner, Dropdown } from '../components/common';
 
 const UserManagementScreen = () => {
+    console.log('[DEBUG] UserManagementScreen rendered, auth object:', auth ? 'Defined' : 'UNDEFINED');
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -44,28 +45,68 @@ const UserManagementScreen = () => {
         setIsLoading(false);
     };
 
-    const handleDeleteUser = (userId, email) => {
-        Alert.alert(
-            "Delete User",
-            `Are you sure you want to delete ${email}?`,
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        setIsLoading(true);
-                        const result = await deleteUserAccount(userId);
-                        if (result.success) {
-                            fetchUsers();
-                        } else {
-                            setIsLoading(false);
-                            Alert.alert("Error", result.error);
-                        }
-                    }
-                }
-            ]
-        );
+    const handleDeleteUser = (userId, email, role) => {
+        console.log('[DEBUG] handleDeleteUser clicked for:', email, 'ID:', userId);
+        const currentUser = auth?.currentUser;
+        const isSuperAdmin = currentUser?.email === SUPER_ADMIN_EMAIL;
+
+        // 1. Protection for Super Admin
+        if (email === SUPER_ADMIN_EMAIL) {
+            console.log('[DEBUG] ❌ Blocked: Cannot delete Super Admin.');
+            const msg = "The Super Admin account cannot be deleted or modified.";
+            if (Platform.OS === 'web') window.alert(msg);
+            else Alert.alert("Action Blocked", msg);
+            return;
+        }
+
+        // 2. Protection for Self
+        if (currentUser && currentUser.uid === userId) {
+            console.log('[DEBUG] ❌ Blocked: User is trying to delete themselves.');
+            const msg = "You cannot delete your own administrator account.";
+            if (Platform.OS === 'web') window.alert(msg);
+            else Alert.alert("Action Blocked", msg);
+            return;
+        }
+
+        // 3. Permission Check: Regular Admins cannot delete other Admins
+        if (!isSuperAdmin && role === 'admin') {
+            const msg = "Regular administrators cannot delete other admin accounts. Only the Super Admin can do this.";
+            if (Platform.OS === 'web') window.alert(msg);
+            else Alert.alert("Access Denied", msg);
+            return;
+        }
+
+        const runDelete = async () => {
+            console.log('[DEBUG] 🚀 Starting deletion process for:', email);
+            setIsLoading(true);
+            const result = await deleteUserAccount(userId);
+            console.log('[DEBUG] 🛡️ Deletion result:', result);
+            if (result.success) {
+                console.log('[DEBUG] ✅ Deletion successful, refreshing list...');
+                fetchUsers();
+            } else {
+                console.log('[DEBUG] ❌ Deletion failed:', result.error);
+                setIsLoading(false);
+                if (Platform.OS === 'web') window.alert("Error: " + result.error);
+                else Alert.alert("Error", result.error);
+            }
+        };
+
+        console.log('[DEBUG] ❓ Showing confirmation dialog...');
+        if (Platform.OS === 'web') {
+            if (window.confirm(`Are you sure you want to delete ${email}? This will permanently block their access.`)) {
+                runDelete();
+            }
+        } else {
+            Alert.alert(
+                "Delete User",
+                `Are you sure you want to delete ${email}? This will permanently block their access and remove them from this list.`,
+                [
+                    { text: "Cancel", style: "cancel" },
+                    { text: "Delete", style: "destructive", onPress: runDelete }
+                ]
+            );
+        }
     };
 
     const handleCreateUser = async () => {
@@ -107,55 +148,72 @@ const UserManagementScreen = () => {
         setIsLoading(false);
     };
 
-    const renderUser = ({ item }) => (
-        <View style={styles.userCard}>
-            <TouchableOpacity
-                style={styles.userInfo}
-                onPress={() => Alert.alert("User Details", `Email: ${item.email}\nRole: ${item.role || 'user'}\nStatus: ${item.status || 'approved'}`)}
-            >
-                <Text style={styles.userEmail}>{item.email}</Text>
-                <View style={styles.roleContainer}>
-                    <Text style={styles.userRole}>Role: {item.role || 'user'}</Text>
-                    <View style={[styles.statusBadge, item.status === 'pending' ? styles.pendingBadge : item.status === 'rejected' ? styles.rejectedBadge : styles.approvedBadge]}>
-                        <Text style={styles.statusText}>{item.status || 'approved'}</Text>
-                    </View>
-                </View>
-            </TouchableOpacity>
+    const renderUser = ({ item }) => {
+        const currentUser = auth?.currentUser;
+        const isSuperAdmin = currentUser?.email === SUPER_ADMIN_EMAIL;
+        const isTargetAdmin = item.role === 'admin';
+        const isTargetSuperAdmin = item.email === SUPER_ADMIN_EMAIL;
 
-            <View style={styles.cardActions}>
-                {item.status === 'pending' && (
-                    <View style={styles.approvalActions}>
-                        <TouchableOpacity
-                            onPress={() => handleUpdateStatus(item.id, 'approved')}
-                            style={[styles.actionBtn, styles.approveBtn]}
-                        >
-                            <Text style={styles.actionBtnText}>✓</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            onPress={() => handleUpdateStatus(item.id, 'rejected')}
-                            style={[styles.actionBtn, styles.rejectBtn]}
-                        >
-                            <Text style={styles.actionBtnText}>✗</Text>
-                        </TouchableOpacity>
+        // SECURITY: Regular Admins cannot see actions for other Admins
+        const canManageTarget = isSuperAdmin || !isTargetAdmin;
+
+        return (
+            <View style={styles.userCard}>
+                <TouchableOpacity
+                    style={styles.userInfo}
+                    onPress={() => Alert.alert("User Details", `Email: ${item.email}\nRole: ${item.role || 'user'}\nStatus: ${item.status || 'approved'}`)}
+                >
+                    <Text style={styles.userEmail}>{item.email}</Text>
+                    <View style={styles.roleContainer}>
+                        <Text style={styles.userRole}>Role: {item.role || 'user'}</Text>
+                        <View style={[styles.statusBadge, item.status === 'pending' ? styles.pendingBadge : item.status === 'rejected' ? styles.rejectedBadge : styles.approvedBadge]}>
+                            <Text style={styles.statusText}>{item.status || 'approved'}</Text>
+                        </View>
+                        {isTargetSuperAdmin && <View style={[styles.statusBadge, { backgroundColor: '#fef3c7', marginLeft: 5 }]}><Text style={[styles.statusText, { color: '#d97706' }]}>SUPER ADMIN</Text></View>}
                     </View>
-                )}
-                <View style={styles.mainActions}>
-                    <TouchableOpacity
-                        onPress={() => handleEditUser(item)}
-                        style={styles.editButton}
-                    >
-                        <Text style={styles.editIcon}>✏️</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                        onPress={() => handleDeleteUser(item.id, item.email)}
-                        style={styles.deleteButton}
-                    >
-                        <Text style={styles.deleteIcon}>🗑️</Text>
-                    </TouchableOpacity>
+                </TouchableOpacity>
+
+                <View style={styles.cardActions}>
+                    {item.status === 'pending' && canManageTarget && (
+                        <View style={styles.approvalActions}>
+                            <TouchableOpacity
+                                onPress={() => handleUpdateStatus(item.id, 'approved')}
+                                style={[styles.actionBtn, styles.approveBtn]}
+                            >
+                                <Text style={styles.actionBtnText}>✓</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={() => handleUpdateStatus(item.id, 'rejected')}
+                                style={[styles.actionBtn, styles.rejectBtn]}
+                            >
+                                <Text style={styles.actionBtnText}>✗</Text>
+                            </TouchableOpacity>
+                        </View>
+                    )}
+                    <View style={styles.mainActions}>
+                        {canManageTarget && !isTargetSuperAdmin && (
+                            <>
+                                <TouchableOpacity
+                                    onPress={() => handleEditUser(item)}
+                                    style={styles.editButton}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    <Text style={styles.editIcon}>✏️</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={() => handleDeleteUser(item.id, item.email, item.role)}
+                                    style={styles.deleteButton}
+                                    hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                                >
+                                    <Text style={styles.deleteIcon}>🗑️</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </View>
                 </View>
             </View>
-        </View>
-    );
+        );
+    };
 
     return (
         <SafeAreaView style={styles.container}>
@@ -172,7 +230,7 @@ const UserManagementScreen = () => {
             </View>
 
             <FlatList
-                data={users}
+                data={users.filter(u => u.status !== 'deleted')}
                 renderItem={renderUser}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContent}
@@ -364,6 +422,7 @@ const styles = StyleSheet.create({
     cardActions: {
         flexDirection: 'row',
         alignItems: 'center',
+        zIndex: 10,
     },
     approvalActions: {
         flexDirection: 'row',

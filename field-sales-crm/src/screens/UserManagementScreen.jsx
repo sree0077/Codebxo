@@ -5,7 +5,6 @@ import { getAllUsers, deleteUserAccount, registerUser, updateUserStatus, updateU
 import { Button, Input, LoadingSpinner, Dropdown } from '../components/common';
 
 const UserManagementScreen = () => {
-    console.log('[DEBUG] UserManagementScreen rendered, auth object:', auth ? 'Defined' : 'UNDEFINED');
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -46,13 +45,11 @@ const UserManagementScreen = () => {
     };
 
     const handleDeleteUser = (userId, email, role) => {
-        console.log('[DEBUG] handleDeleteUser clicked for:', email, 'ID:', userId);
         const currentUser = auth?.currentUser;
         const isSuperAdmin = currentUser?.email === SUPER_ADMIN_EMAIL;
 
         // 1. Protection for Super Admin
         if (email === SUPER_ADMIN_EMAIL) {
-            console.log('[DEBUG] ❌ Blocked: Cannot delete Super Admin.');
             const msg = "The Super Admin account cannot be deleted or modified.";
             if (Platform.OS === 'web') window.alert(msg);
             else Alert.alert("Action Blocked", msg);
@@ -61,7 +58,6 @@ const UserManagementScreen = () => {
 
         // 2. Protection for Self
         if (currentUser && currentUser.uid === userId) {
-            console.log('[DEBUG] ❌ Blocked: User is trying to delete themselves.');
             const msg = "You cannot delete your own administrator account.";
             if (Platform.OS === 'web') window.alert(msg);
             else Alert.alert("Action Blocked", msg);
@@ -77,22 +73,17 @@ const UserManagementScreen = () => {
         }
 
         const runDelete = async () => {
-            console.log('[DEBUG] 🚀 Starting deletion process for:', email);
             setIsLoading(true);
             const result = await deleteUserAccount(userId);
-            console.log('[DEBUG] 🛡️ Deletion result:', result);
             if (result.success) {
-                console.log('[DEBUG] ✅ Deletion successful, refreshing list...');
                 fetchUsers();
             } else {
-                console.log('[DEBUG] ❌ Deletion failed:', result.error);
                 setIsLoading(false);
                 if (Platform.OS === 'web') window.alert("Error: " + result.error);
                 else Alert.alert("Error", result.error);
             }
         };
 
-        console.log('[DEBUG] ❓ Showing confirmation dialog...');
         if (Platform.OS === 'web') {
             if (window.confirm(`Are you sure you want to delete ${email}? This will permanently block their access.`)) {
                 runDelete();

@@ -55,7 +55,6 @@ const validateFirebaseConfig = () => {
 validateFirebaseConfig();
 
 // Initialize Firebase
-console.log('[FIREBASE] 🔥 Initializing Firebase...');
 const app = initializeApp(firebaseConfig);
 
 // Initialize Auth with proper persistence for React Native
@@ -84,12 +83,10 @@ try {
 
 // Initialize Firestore
 const db = getFirestore(app);
-console.log('[FIREBASE] ✅ Firebase initialized successfully');
 
 // Auth Functions
 export const loginUser = async (email, password) => {
   try {
-    console.log('[FIREBASE] 🔐 Attempting login for:', email);
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
@@ -139,7 +136,6 @@ export const loginUser = async (email, password) => {
       return { success: false, error: 'Your account access has been restricted by the administrator.' };
     }
 
-    console.log('[FIREBASE] ✅ Login successful, status:', userData.status);
     return { success: true, user: { ...userData, uid: user.uid } };
   } catch (error) {
     console.error('[FIREBASE] ❌ Login error:', error.code, error.message);
@@ -149,7 +145,6 @@ export const loginUser = async (email, password) => {
 
 export const registerUser = async (email, password, role = 'user', status = null) => {
   try {
-    console.log('[FIREBASE] 📝 Attempting registration for:', email, 'Role:', role, 'Status:', status);
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
@@ -201,7 +196,6 @@ export const getAllUsers = async () => {
 
 export const deleteUserAccount = async (userId) => {
   try {
-    console.log('[FIREBASE] 🔒 Soft-deleting user record (setting as deleted):', userId);
     const userRef = doc(db, COLLECTIONS.USERS, userId);
 
     // 1. Mark user as deleted

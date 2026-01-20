@@ -30,22 +30,13 @@ const RoutePolyline = ({ encodedPolyline, coordinates, strokeColor = '#3b82f6', 
     ? decodePolyline(encodedPolyline)
     : coordinates || [];
 
-  console.log('[POLYLINE] Rendering route:', {
-    hasEncodedPolyline: !!encodedPolyline,
-    hasCoordinates: !!coordinates,
-    routeCoordinatesCount: routeCoordinates?.length,
-    platform: Platform.OS
-  });
-
   if (!routeCoordinates || routeCoordinates.length === 0) {
-    console.log('[POLYLINE] No coordinates to render');
     return null;
   }
 
   if (Platform.OS === 'web') {
     // Web: Use Google Maps Polyline
     if (!PolylineWeb) {
-      console.log('[POLYLINE] PolylineWeb component not available');
       return null;
     }
 
@@ -54,8 +45,6 @@ const RoutePolyline = ({ encodedPolyline, coordinates, strokeColor = '#3b82f6', 
       lat: coord.latitude,
       lng: coord.longitude
     }));
-
-    console.log('[POLYLINE] Rendering web polyline with', path.length, 'points');
 
     return (
       <PolylineWeb
@@ -73,11 +62,8 @@ const RoutePolyline = ({ encodedPolyline, coordinates, strokeColor = '#3b82f6', 
 
   // Mobile: Use react-native-maps Polyline
   if (!Polyline) {
-    console.log('[POLYLINE] Polyline component not available');
     return null;
   }
-
-  console.log('[POLYLINE] Rendering mobile polyline with', routeCoordinates.length, 'points');
 
   return (
     <Polyline

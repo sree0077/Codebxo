@@ -43,7 +43,7 @@ const GOOGLE_MAPS_LIBRARIES = ['places', 'geometry'];
 
 /**
  * Platform-agnostic MapView component
- * Uses Leaflet + OpenStreetMap for web and react-native-maps for mobile
+ * Uses Google Maps for web and react-native-maps for mobile
  */
 const MapView = ({
   region,

@@ -37,6 +37,7 @@ const MainStack = () => (
       headerTintColor: '#ffffff',
       headerTitleStyle: { fontWeight: 'bold' },
       headerBackTitleVisible: false,
+      headerBackVisible: true,
     }}
   >
     <Stack.Screen
@@ -80,6 +81,7 @@ const AdminStack = () => (
       headerTintColor: '#ffffff',
       headerTitleStyle: { fontWeight: 'bold' },
       headerBackTitleVisible: false,
+      headerBackVisible: true,
     }}
   >
     <Stack.Screen
